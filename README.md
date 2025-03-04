@@ -14,20 +14,13 @@ To address this issue, we are developing an AI web application that provides rec
 
 ### Key Features:
 
-**_Recipe Search:_** Users input a dish, and the system provides matching recipes.
-
-**_Ingredient-Based Recipe Search:_** Users input the ingredients they have, and the system suggests suitable recipes.
-
-**_Smart Recipe Filtering:_** The platform prioritizes recipes that match the available ingredients as closely as possible.
-
-**_Step-by-Step Cooking Instructions:_** Each recipe comes with easy-to-follow instructions.
-
-**_User Account:_** Users can save the recipe when they like it.
-
-**_Admin Roles:_** Admin add or manage the content.
-
-**_Secure Login:_** Use the Google OAuth for user authentication.
-
+**_Recipe Search:_** Users input a dish, and the system provides matching recipes.  
+**_Ingredient-Based Recipe Search:_** Users input the ingredients they have, and the system suggests suitable recipes.  
+**_Smart Recipe Filtering:_** The platform prioritizes recipes that match the available ingredients as closely as possible.  
+**_Step-by-Step Cooking Instructions:_** Each recipe comes with easy-to-follow instructions.  
+**_User Account:_** Users can save the recipe when they like it.  
+**_Admin Roles:_** Admin add or manage the content.  
+**_Secure Login:_** Use the Google OAuth for user authentication.  
 **_User-Friendly Interface:_** Simple and intuitive UI to enhance user experience.
 
 ### Project Goals:
