@@ -1,4 +1,4 @@
-# CSE416_ProjectCode-
+# CSE416_ProjectCode
 
 ## Smart AI-Recipes
 
