@@ -29,3 +29,6 @@ Create a web application with a user-friendly interface.
 Implement AI features to provide recipes to the users.
 Ensure security and scalability for a better user experience.
 Make an online platform for public access.
+
+### Jira:
+https://panhwa.atlassian.net/jira/software/projects/CP/summary
