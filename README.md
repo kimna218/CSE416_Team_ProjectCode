@@ -4,7 +4,7 @@
 
 ### Team members:
 
-Hyomin Kim(114744241), Wooktae Chang(111786088), Nahyun Kim(115242403)
+Hyomin Kim(114744241), Nahyun Kim(115242403)
 
 ### Problem Statement:
 
@@ -31,4 +31,5 @@ Ensure security and scalability for a better user experience.
 Make an online platform for public access.
 
 ### Jira:
+
 https://panhwa.atlassian.net/jira/software/projects/CP/summary
