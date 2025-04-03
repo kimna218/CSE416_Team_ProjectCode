@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import "../css/Home.css";
 
 const categories = [
-  { name: "Breakfast", image: "/images/breakfast.jpg", path: "/recipes/breakfast" },
-  { name: "Lunch", image: "/images/lunch.jpg", path: "/recipes/lunch" },
-  { name: "Dinner", image: "/images/dinner.jpg", path: "/recipes/dinner" },
+  { name: "Meal", image: "/images/breakfast.jpg", path: "/recipes/Meal" },
+  { name: "One Dish Meal", image: "/images/lunch.jpg", path: "/recipes/OneDish" },
+  { name: "Soup", image: "/images/dinner.jpg", path: "/recipes/Soup" },
   { name: "Dessert", image: "/images/dessert.jpg", path: "/recipes/dessert" },
 ];
 
