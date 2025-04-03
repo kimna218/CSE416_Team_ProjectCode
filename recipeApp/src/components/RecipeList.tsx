@@ -1,45 +1,65 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "../css/RecipeList.css";
 
-const recipes = {
-  breakfast: [
-    { name: "Pancakes", image: "/images/pancakes.jpg" },
-    { name: "Omelette", image: "/images/omelette.jpg" },
-  ],
-  lunch: [
-    { name: "Grilled Chicken", image: "/images/grilled-chicken.jpg" },
-    { name: "Caesar Salad", image: "/images/caesar-salad.jpg" },
-  ],
-  dinner: [
-    { name: "Steak", image: "/images/steak.jpg" },
-    { name: "Spaghetti", image: "/images/spaghetti.jpg" },
-  ],
-  dessert: [
-    { name: "Chocolate Cake", image: "/images/chocolate-cake.jpg" },
-    { name: "Ice Cream", image: "/images/ice-cream.jpg" },
-  ],
-  snacks: [
-    { name: "Nachos", image: "/images/nachos.jpg" },
-    { name: "Popcorn", image: "/images/popcorn.jpg" },
-  ],
-};
+interface Recipe {
+  id: number;
+  name: string;
+  category: string;
+}
 
 const RecipeList: React.FC = () => {
   const { category } = useParams<{ category: string }>();
-  const categoryRecipes = recipes[category as keyof typeof recipes] || [];
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
+        const data = await res.json();
+        setRecipes(data);
+      } catch (err) {
+        console.error("Error to fetch recipe:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecipes();
+  }, []);
+
+  //흠.. 한국어로 되어있어서..일단은 예시로 바꿨어
+  const categoryMap: Record<string, string> = {
+    Meal: "밥",
+    OneDish: "일품",
+    Soup: "국&찌개",
+    dessert: "후식",
+    SideDish: "반찬",
+  };
+  const korCategory = categoryMap[category || ""] || category;
+  console.log(" korCategory :", korCategory);
+
+  const categoryRecipes = recipes.filter(
+    (recipe) => recipe.category === korCategory
+  );
 
   return (
     <div className="recipe-list-page">
       <h1>{category?.toUpperCase()} Recipes</h1>
-      <div className="recipe-grid">
-        {categoryRecipes.map((recipe, index) => (
-          <div key={index} className="recipe-card">
-            <img src={recipe.image} alt={recipe.name} className="recipe-image" />
-            <p className="recipe-name">{recipe.name}</p>
-          </div>
-        ))}
-      </div>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <div className="recipe-grid">
+          {categoryRecipes.map((recipe) => (
+            <div key={recipe.id} className="recipe-card">
+              <img src="/images/default-image.jpg" alt={recipe.name} className="recipe-image" />
+              <p className="recipe-name">{recipe.name}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
