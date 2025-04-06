@@ -74,24 +74,53 @@ const RecipeDetails: React.FC = () => {
                 </div>
             </div>
         </div>
+
+    <div className="nutrition-box">
+            <h4>Nutrition Info</h4>
+            <table className="nutrition-table">
+                <tbody>
+                <tr>
+                    <td>Calory</td>
+                    <td>0 kcal</td>
+                </tr>
+                <tr>
+                    <td>Carbohydrate</td>
+                    <td>0 g</td>
+                </tr>
+                <tr>
+                    <td>Protein</td>
+                    <td>0 g</td>
+                </tr>
+                <tr>
+                    <td>Fat</td>
+                    <td>0 g</td>
+                </tr>
+                <tr>
+                    <td>Sodium</td>
+                    <td>0 mg</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
         
         <div className="rating-box">
-        <h4>Rate this recipe</h4>
-        <div className="stars">
-            {[1, 2, 3, 4, 5].map((star) => (
-            <span
-                key={star}
-                className={`star ${star <= (hoverRating || rating) ? "filled" : ""}`}
-                onClick={() => setRating(star)}
-                onMouseEnter={() => setHoverRating(star)}
-                onMouseLeave={() => setHoverRating(0)}
-                >
-                ★
-            </span>
-            ))}
+            <h4>Rate this recipe</h4>
+            <div className="stars">
+                {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                    key={star}
+                    className={`star ${star <= (hoverRating || rating) ? "filled" : ""}`}
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    >
+                    ★
+                </span>
+                ))}
+            </div>
+            {rating > 0 && <p>You rated this recipe {rating} out of 5</p>}
         </div>
-        {rating > 0 && <p>You rated this recipe {rating} out of 5</p>}
-        </div>
+
     </div>
   );
 };

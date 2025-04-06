@@ -90,3 +90,22 @@
 .star.filled {
     color: #fbc02d;
 }
+
+.nutrition-box {
+    margin-top: 2rem;
+    width: 100%;
+}
+
+.nutrition-box h4 {
+    margin-bottom: 0.5rem;
+}
+
+.nutrition-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.nutrition-table td {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #eee;
+}
