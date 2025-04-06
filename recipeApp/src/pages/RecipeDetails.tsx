@@ -2,22 +2,21 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "../css/RecipeDetails.css";
 
-interface ManualStep {
-  text: string;
-  image?: string;
-}
+// interface ManualStep {
+//   text: string;
+//   image?: string;
+// }
 
 const RecipeDetails: React.FC = () => {
   const { recipeName } = useParams<{ recipeName: string }>();
   const [activeTab, setActiveTab] = useState<"instructions" | "ingredients">("instructions");
-  const [manual, setManual] = useState<ManualStep[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const [rating, setRating] = useState(0);        // 실제 선택된 별점
-  const [hoverRating, setHoverRating] = useState(0); // 마우스 오버 시 별점
+//   나중에 openAPI에서 가져와야댐..
+//   const [manual, setManual] = useState<ManualStep[]>([]);
+//   const [loading, setLoading] = useState(true);
 
-
-  
+  const [rating, setRating] = useState(0);        
+  const [hoverRating, setHoverRating] = useState(0); 
 
   // 예시 데이터
   const ingredients = [
@@ -86,17 +85,14 @@ const RecipeDetails: React.FC = () => {
                 onClick={() => setRating(star)}
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
-            >
+                >
                 ★
             </span>
             ))}
         </div>
         {rating > 0 && <p>You rated this recipe {rating} out of 5</p>}
         </div>
-
     </div>
-
-    
   );
 };
 
