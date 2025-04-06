@@ -31,7 +31,7 @@ function Home() {
       <div className="categories-preview">
         <h2>Browse by Categories</h2>
         <div className="category-grid">
-          {categories.map((category, index) => (
+          {/* {categories.map((category, index) => (
             <div
               key={index}
               className="category-block"
@@ -40,7 +40,7 @@ function Home() {
               <img src={category.image} alt={category.name} className="category-image" />
               <p className="category-name">{category.name}</p>
             </div>
-          ))}
+          ))} */}
         </div>
       </div>
 

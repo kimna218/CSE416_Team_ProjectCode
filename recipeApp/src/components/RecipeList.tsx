@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams,useNavigate } from "react-router-dom";
 import "../css/RecipeList.css";
 
 interface Recipe {
@@ -12,6 +12,7 @@ const RecipeList: React.FC = () => {
   const { category } = useParams<{ category: string }>();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -44,6 +45,11 @@ const RecipeList: React.FC = () => {
     (recipe) => recipe.category === korCategory
   );
 
+  const handleClick = (recipe: Recipe) => {
+    const path = `/recipes/detail/${encodeURIComponent(recipe.name)}`;
+    navigate(path);
+  };
+
   return (
     <div className="recipe-list-page">
       <h1>{category?.toUpperCase()} Recipes</h1>
@@ -54,7 +60,9 @@ const RecipeList: React.FC = () => {
         <div className="recipe-grid">
           {categoryRecipes.map((recipe) => (
             <div key={recipe.id} className="recipe-card">
-              <img src="/images/default-image.jpg" alt={recipe.name} className="recipe-image" />
+              <img src="/images/default-image.jpg" alt={recipe.name} className="recipe-image" 
+              onClick={() => handleClick(recipe)}
+              />
               <p className="recipe-name">{recipe.name}</p>
             </div>
           ))}
@@ -62,6 +70,9 @@ const RecipeList: React.FC = () => {
       )}
     </div>
   );
+  
 };
+
+
 
 export default RecipeList;

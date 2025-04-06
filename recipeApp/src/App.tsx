@@ -6,7 +6,7 @@ import Category from './pages/Category';
 import SearchResult from './pages/SearchResult';
 import Profile from './pages/Profile';
 import RecipeList from './components/RecipeList';
-// import RecipeDetails from "./pages/RecipeDetails";
+import RecipeDetails from "./pages/RecipeDetails";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 
@@ -23,7 +23,7 @@ const App: React.FC = () => {
           <Route path="/recipes/:category" element={<RecipeList />} />
           <Route path="/search-result" element={<SearchResult />} />
           <Route path="/profile" element={<Profile />} />
-          {/* <Route path="/recipes/:category/:recipeName" element={<RecipeDetails />} /> */}
+          <Route path="/recipes/detail/:recipeName" element={<RecipeDetails />} />
         </Routes>
       </main>
     </Router>
