@@ -109,3 +109,23 @@
     padding: 0.5rem 1rem;
     border-bottom: 1px solid #eee;
 }
+
+.recipe-title-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.recipe-title {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+
+.heart-icon:hover {
+    transform: scale(1.2);
+}
+
+.heart-icon.favorited {
+    color: red;
+}

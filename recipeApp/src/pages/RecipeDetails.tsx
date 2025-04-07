@@ -17,6 +17,8 @@ const RecipeDetails: React.FC = () => {
 
   const [rating, setRating] = useState(0);        
   const [hoverRating, setHoverRating] = useState(0); 
+  const [isFavorited, setIsFavorited] = useState(false);
+
 
   // 예시 데이터
   const ingredients = [
@@ -35,7 +37,18 @@ const RecipeDetails: React.FC = () => {
 
   return (
     <div className="recipe-detail-page">
-      <h2>{recipeName}</h2>
+
+        <div className="recipe-title-box">
+            <h2 className="recipe-title">
+                {recipeName}
+                <span
+                className={`heart-icon ${isFavorited ? "favorited" : ""}`}
+                onClick={() => setIsFavorited(!isFavorited)}
+                >
+                {isFavorited ? "♥" : "♥"}
+                </span>
+            </h2>
+        </div>
         <div className="recipe-content">
             <div className="recipe-image-box">
                 <img src="/images/default-image.jpg" className="recipe-detail-image" alt="reci image" />
