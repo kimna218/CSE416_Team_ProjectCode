@@ -59,10 +59,8 @@ const RecipeList: React.FC = () => {
       ) : (
         <div className="recipe-grid">
           {categoryRecipes.map((recipe) => (
-            <div key={recipe.id} className="recipe-card">
-              <img src="/images/default-image.jpg" alt={recipe.name} className="recipe-image" 
-              onClick={() => handleClick(recipe)}
-              />
+            <div key={recipe.id} className="recipe-card" onClick={() => handleClick(recipe)}>
+              <img src="/images/default-image.jpg" alt={recipe.name} className="recipe-image" />
               <p className="recipe-name">{recipe.name}</p>
             </div>
           ))}
