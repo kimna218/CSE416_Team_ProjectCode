@@ -32,11 +32,11 @@ const RecipeList: React.FC = () => {
 
   //흠.. 한국어로 되어있어서..일단은 예시로 바꿨어
   const categoryMap: Record<string, string> = {
-    Meal: "밥",
-    OneDish: "일품",
-    Soup: "국&찌개",
+    rice: "밥",
+    oneDish: "일품",
+    soup: "국&찌개",
     dessert: "후식",
-    SideDish: "반찬",
+    sideDish: "반찬",
   };
   const korCategory = categoryMap[category || ""] || category;
   console.log(" korCategory :", korCategory);
