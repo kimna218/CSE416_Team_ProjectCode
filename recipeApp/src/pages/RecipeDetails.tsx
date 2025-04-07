@@ -88,7 +88,7 @@ const RecipeDetails: React.FC = () => {
             </div>
         </div>
 
-    <div className="nutrition-box">
+        <div className="nutrition-box">
             <h4>Nutrition Info</h4>
             <table className="nutrition-table">
                 <tbody>
