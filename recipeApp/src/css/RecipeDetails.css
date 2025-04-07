@@ -1,7 +1,6 @@
 .recipe-detail-page {
-    padding: 2rem;
-    max-width: 1000px;
-    margin: 0 auto;
+    padding-top: 100px;
+    padding-left: 10%;    
 }
 
 .recipe-content {
@@ -13,8 +12,6 @@
 .recipe-image-box {
     flex: 1 1 300px;
 }
-
-
 
 .recipe-detail-image {
     width: 100%;
@@ -108,4 +105,24 @@
 .nutrition-table td {
     padding: 0.5rem 1rem;
     border-bottom: 1px solid #eee;
+}
+
+.recipe-title-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.recipe-title {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+
+.heart-icon:hover {
+    transform: scale(1.2);
+}
+
+.heart-icon.favorited {
+    color: red;
 }
