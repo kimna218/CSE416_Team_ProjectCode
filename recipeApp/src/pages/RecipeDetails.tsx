@@ -18,6 +18,7 @@ const RecipeDetails: React.FC = () => {
   const [rating, setRating] = useState(0);        
   const [hoverRating, setHoverRating] = useState(0); 
   const [isFavorited, setIsFavorited] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
 
   // 예시 데이터
@@ -35,6 +36,30 @@ const RecipeDetails: React.FC = () => {
     "..."
   ];
 
+    const handleFeedbackSubmit = () => {
+        if (feedback.trim() === "") {
+            alert("Please write something before submitting!");
+            return;
+        }
+
+        // user not logged in setup.
+        
+        console.log("Feedback submitted:", feedback);
+        alert("Thanks for your feedback!");
+        setFeedback(""); // 초기화
+    };
+
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href)
+            .then(() => {
+            alert("Link has been copied!");
+            })
+            .catch((err) => {
+            console.error("Failed to share:", err);
+            });
+    };
+
+
   return (
     <div className="recipe-detail-page">
 
@@ -48,72 +73,78 @@ const RecipeDetails: React.FC = () => {
                 {isFavorited ? "♥" : "♥"}
                 </span>
             </h2>
+
+            <button className="share-button" onClick={handleShare}>
+                🔗 Share
+            </button>
         </div>
-        <div className="recipe-content">
+        
+
+        <div className="recipe-image-nutrition-content">
             <div className="recipe-image-box">
                 <img src="/images/default-image.jpg" className="recipe-detail-image" alt="reci image" />
             </div>
 
-                <div className="recipe-info-box">
-                <div className="tab-buttons">
-                    <button
-                    className={activeTab === "instructions" ? "active" : ""}
-                    onClick={() => setActiveTab("instructions")}
-                    >
-                    Instructions
-                    </button>
-                    <button
-                    className={activeTab === "ingredients" ? "active" : ""}
-                    onClick={() => setActiveTab("ingredients")}
-                    >
-                    Ingredients
-                    </button>
-                </div>
-
-                <div className="tab-content">
-                    {activeTab === "instructions" ? (
-                    <ul>
-                        {instructions.map((step, i) => (
-                        <li key={i}><strong>Step {i + 1}:</strong> {step}</li>
-                        ))}
-                    </ul>
-                    ) : (
-                    <ul>
-                        {ingredients.map((item, i) => (
-                        <li key={i}>• {item}</li>
-                        ))}
-                    </ul>
-                    )}
-                </div>
+            <div className="nutrition-box">
+                <h4>Nutrition Info</h4>
+                <table className="nutrition-table">
+                    <tbody>
+                    <tr>
+                        <td>Calory</td>
+                        <td>0 kcal</td>
+                    </tr>
+                    <tr>
+                        <td>Carbohydrate</td>
+                        <td>0 g</td>
+                    </tr>
+                    <tr>
+                        <td>Protein</td>
+                        <td>0 g</td>
+                    </tr>
+                    <tr>
+                        <td>Fat</td>
+                        <td>0 g</td>
+                    </tr>
+                    <tr>
+                        <td>Sodium</td>
+                        <td>0 mg</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div className="nutrition-box">
-            <h4>Nutrition Info</h4>
-            <table className="nutrition-table">
-                <tbody>
-                <tr>
-                    <td>Calory</td>
-                    <td>0 kcal</td>
-                </tr>
-                <tr>
-                    <td>Carbohydrate</td>
-                    <td>0 g</td>
-                </tr>
-                <tr>
-                    <td>Protein</td>
-                    <td>0 g</td>
-                </tr>
-                <tr>
-                    <td>Fat</td>
-                    <td>0 g</td>
-                </tr>
-                <tr>
-                    <td>Sodium</td>
-                    <td>0 mg</td>
-                </tr>
-                </tbody>
-            </table>
+        <div className="recipe-info-box">
+            <div className="tab-buttons">
+                <button
+                className={activeTab === "instructions" ? "active" : ""}
+                onClick={() => setActiveTab("instructions")}
+                >
+                Instructions
+                </button>
+                <button
+                className={activeTab === "ingredients" ? "active" : ""}
+                onClick={() => setActiveTab("ingredients")}
+                >
+                Ingredients
+                </button>
+            </div>
+
+            <div className="tab-content">
+                {activeTab === "instructions" ? (
+                <ul>
+                    {instructions.map((step, i) => (
+                    <li key={i}><strong>Step {i + 1}:</strong> {step}</li>
+                    ))}
+                </ul>
+                ) : (
+                <ul>
+                    {ingredients.map((item, i) => (
+                    <li key={i}>• {item}</li>
+                    ))}
+                </ul>
+                )}
+            </div>
         </div>
         
         <div className="rating-box">
@@ -132,6 +163,19 @@ const RecipeDetails: React.FC = () => {
                 ))}
             </div>
             {rating > 0 && <p>You rated this recipe {rating} out of 5</p>}
+
+            <div className="feedback-box">
+                <label htmlFor="feedback">Leave your feedback:</label>
+                <textarea
+                id="feedback"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Tell us what you think about the recipe..."
+                rows={4}
+                cols={50}
+                />
+                <button onClick={handleFeedbackSubmit}>Submit Feedback</button>
+            </div>
         </div>
 
     </div>

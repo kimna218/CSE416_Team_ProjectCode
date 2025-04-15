@@ -3,15 +3,13 @@
     padding-left: 10%;    
 }
 
-.recipe-content {
+.recipe-image-nutrition-content {
     display: flex;
     flex-wrap: wrap;
     gap: 2rem;
+    padding-bottom: 5%;
 }
 
-.recipe-image-box {
-    flex: 1 1 300px;
-}
 
 .recipe-detail-image {
     width: 100%;
@@ -89,8 +87,8 @@
 }
 
 .nutrition-box {
-    margin-top: 2rem;
-    width: 100%;
+    flex: 1 1 45%;
+    justify-content: center;
 }
 
 .nutrition-box h4 {
@@ -125,4 +123,62 @@
 
 .heart-icon.favorited {
     color: red;
+}
+
+.feedback-box {
+    margin-top: 10px;
+    margin-bottom: 60px;
+}
+
+.feedback-box textarea {
+    width: 100%;
+    padding: 8px;
+    resize: vertical;
+}
+
+.feedback-box button {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background-color: #91b6db;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.recipe-title-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.recipe-title {
+    font-size: 28px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.heart-icon {
+    cursor: pointer;
+    font-size: 24px;
+    color: gray;
+}
+
+.heart-icon.favorited {
+    color: red;
+}
+
+.share-button {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.share-button:hover {
+    background-color: #e0e0e0;
 }

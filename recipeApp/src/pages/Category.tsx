@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import "../css/Category.css";
 
 const categories = [
-  { name: "Rice", image: "/images/breakfast.jpg", path: "/recipes/rice" },
-  { name: "One Dish Meal", image: "/images/lunch.jpg", path: "/recipes/oneDish" },
-  { name: "Soup", image: "/images/dinner.jpg", path: "/recipes/soup" },
+  { name: "Rice", image: "/images/rice.jpg", path: "/recipes/rice" },
+  { name: "One Dish Meal", image: "/images/oneDish.jpg", path: "/recipes/oneDish" },
+  { name: "Soup", image: "/images/soup.jpg", path: "/recipes/soup" },
   { name: "Dessert", image: "/images/dessert.jpg", path: "/recipes/dessert" },
-  { name: "Side Dish", image: "/images/snacks.jpg", path: "/recipes/sideDish" },
+  { name: "Side Dish", image: "/images/sideDish.jpg", path: "/recipes/sideDish" },
 ];
 
 const Category: React.FC = () => {
