@@ -1,32 +1,46 @@
-import React, { useState } from "react";
+import React, { useEffect,useState } from "react";
 import "../css/SearchResult.css";
 
-const recipes = [
-  { name: "Egg and Cheese Sandwich", image: "/images/egg-cheese-sandwich.jpg" },
-  { name: "Tomato Pasta", image: "/images/tomato-pasta.jpg" },
-  { name: "Cheese Omelette", image: "/images/cheese-omelette.jpg" },
-  { name: "Tomato Salad", image: "/images/tomato-salad.jpg" },
-  { name: "Pancakes", image: "/images/pancakes.jpg" },
-  { name: "Grilled Chicken", image: "/images/grilled-chicken.jpg" },
-];
+interface Recipe {
+  id: number;
+  name: string;
+  category: string;
+  image_url: string;
+}
 
-function SearchResult() {
+const SearchResult: React.FC = () => {
   const [searchInput, setSearchInput] = useState("");
-  const [filteredRecipes, setFilteredRecipes] = useState(recipes);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+      const fetchRecipes = async () => {
+        try {
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
+          const data = await res.json();
+          setRecipes(data);
+        } catch (err) {
+          console.error("Error to fetch recipe:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchRecipes();
+  }, []);
+  
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value.toLowerCase();
-    setSearchInput(query);
-    const results = recipes.filter((recipe) =>
-      recipe.name.toLowerCase().includes(query)
-    );
-    setFilteredRecipes(results);
+    setSearchInput(e.target.value.toLowerCase());
   };
+
+  const filteredRecipes = recipes.filter((recipe) =>
+    recipe.name.toLowerCase().includes(searchInput)
+  );
 
   return (
     <div className="search-result-page">
       <h1>Search Recipes</h1>
-      <p className="search-result-page-desc">Filter recipes by its name:</p>
+      <p className="search-result-page-desc">Filter recipes by its name or Enter ingredients separated by commas (e.g., eggs, cheese, tomatoes):</p>
       <input
         type="text"
         value={searchInput}
@@ -38,7 +52,7 @@ function SearchResult() {
         {filteredRecipes.length > 0 ? (
           filteredRecipes.map((recipe, index) => (
             <div key={index} className="recipe-card">
-              <img src={recipe.image} alt={recipe.name} className="recipe-image" />
+              <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
               <p className="recipe-name">{recipe.name}</p>
             </div>
           ))

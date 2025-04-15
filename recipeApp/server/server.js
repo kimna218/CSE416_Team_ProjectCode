@@ -32,7 +32,8 @@ await db.execute(`
   CREATE TABLE IF NOT EXISTS recipes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
-    category VARCHAR(1000)
+    category VARCHAR(50),
+    image_url VARCHAR(255)
   )
 `);
 
@@ -50,11 +51,12 @@ const importRecipesFromOpenAPI = async () => {
     for (const recipe of rows) {
       const name = recipe.RCP_NM;
       const category = recipe.RCP_PAT2;
-      if (name && category) {
+      const image_url = recipe.ATT_FILE_NO_MAIN;
+      if (name && category && image_url) {
         try {
           await db.execute(
-            "INSERT IGNORE INTO recipes (name, category) VALUES (?, ?)",
-            [name, category]
+            "INSERT IGNORE INTO recipes (name, category, image_url) VALUES (?, ?, ?)",
+            [name, category, image_url]
           );
         } catch (e) {
           console.warn("Fail to insert:", name);
@@ -75,17 +77,26 @@ app.get("/recipes", async (req, res) => {
 });
 
 app.post("/recipes", async (req, res) => {
-  const { name, category } = req.body;
+  const { name, category, image_url } = req.body;
   try {
     await db.execute(
-      "INSERT IGNORE INTO recipes (name, category) VALUES (?, ?)",
-      [name, category]
+      "INSERT IGNORE INTO recipes (name, category, image_url) VALUES (?, ?, ?)",
+      [name, category, image_url]
     );
     res.json({ success: true });
   } catch (err) {
     console.error("Fail to insert:", err);
     res.status(500).json({ success: false });
   }
+});
+
+// recipe detail가져오기
+app.get("/recipes/detail/:name", async (req, res) => {
+  const [rows] = await db.execute(
+    "SELECT * FROM recipes WHERE name = ?",
+    [req.params.name]
+  );
+  res.json(rows[0]); // 하나만 가져옴
 });
 
 // 🔹 서버 시작
