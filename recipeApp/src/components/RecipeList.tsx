@@ -40,7 +40,7 @@ const RecipeList: React.FC = () => {
     sideDish: "반찬",
   };
   const korCategory = categoryMap[category || ""] || category;
-  console.log(" korCategory :", korCategory);
+  // console.log(" korCategory :", korCategory);
 
   const categoryRecipes = recipes.filter(
     (recipe) => recipe.category === korCategory

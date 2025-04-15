@@ -90,6 +90,15 @@ app.post("/recipes", async (req, res) => {
   }
 });
 
+// recipe detail가져오기
+app.get("/recipes/detail/:name", async (req, res) => {
+  const [rows] = await db.execute(
+    "SELECT * FROM recipes WHERE name = ?",
+    [req.params.name]
+  );
+  res.json(rows[0]); // 하나만 가져옴
+});
+
 // 🔹 서버 시작
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, async () => {
