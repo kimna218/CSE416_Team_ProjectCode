@@ -62,3 +62,30 @@
     color: #0d6efd;
     padding: 10px 0;
 }
+.sort-bar {
+    display: flex;
+    align-items: center;
+}
+
+.nutrition-info {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.show-more-container {
+    display: flex;
+    justify-content: center;
+}
+
+.show-more-button {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #91b6db;
+    transition: transform 0.2s ease;
+}
+
+.show-more-button:hover {
+    transform: translateY(2px);
+}
