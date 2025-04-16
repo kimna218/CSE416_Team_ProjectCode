@@ -18,17 +18,9 @@ console.log({
   database: process.env.DB_NAME,
 });
 
-// MySQL 서버에 연결 
-const baseConnection = await mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
-
-
 // DB에 연결
 const db = await mysql.createConnection({
-  host: process.env.DB_HOST,
+  socketPath: process.env.DB_SOCKET_PATH,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
