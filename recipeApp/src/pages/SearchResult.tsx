@@ -1,4 +1,5 @@
 import React, { useEffect,useState } from "react";
+import { useParams,useNavigate } from "react-router-dom";
 import "../css/SearchResult.css";
 
 interface Recipe {
@@ -37,6 +38,12 @@ const SearchResult: React.FC = () => {
     recipe.name.toLowerCase().includes(searchInput)
   );
 
+  const navigate = useNavigate();
+  const handleClick = (recipe: Recipe) => {
+    const path = `/recipes/detail/${encodeURIComponent(recipe.name)}`;
+    navigate(path);
+  };
+
   return (
     <div className="search-result-page">
       <h1>Search Recipes</h1>
@@ -51,7 +58,7 @@ const SearchResult: React.FC = () => {
       <div className="results-grid">
         {filteredRecipes.length > 0 ? (
           filteredRecipes.map((recipe, index) => (
-            <div key={index} className="recipe-card">
+            <div key={index} className="recipe-card" onClick={() => handleClick(recipe)}>
               <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
               <p className="recipe-name">{recipe.name}</p>
             </div>
