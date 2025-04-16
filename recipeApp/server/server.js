@@ -10,6 +10,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+console.log("📡 Connecting to DB...");
+console.log({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
+
 // MySQL 서버에 연결 
 const baseConnection = await mysql.createConnection({
   host: process.env.DB_HOST,
