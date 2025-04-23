@@ -38,13 +38,13 @@ https://trello.com/b/1B4X590E/cse416ai-powered-recipes
 
 This project is currently running on a local development environment. The instructions below will help you get started with checking out the source code, building the software, and testing it locally.
 
-#### 1.Clone the Repository
+#### 1. 🔨 Clone the Repository
 
 https://github.com/jellyrgb/CSE416_ProjectCode.git
 or
 Open with the GitHub Desktop
 
-#### 2. Install Dependencies
+#### 2. 🔨 Install Dependencies
 
 - For React
   cd src
@@ -54,7 +54,7 @@ Open with the GitHub Desktop
   cd server
   npm install
 
-#### 3. Set Up and Run the Local Environment
+#### 3. 🛠️ Set Up and Run the Local Environment
 
 - Make sure to change .env file located in /src and /src/server path to your local information
 - Make sure MySQL is running
@@ -69,7 +69,7 @@ Open with the GitHub Desktop
   cd src
   npm run dev
 
-#### 4. Testing the System:
+#### 4. 🔖 Testing the System:
 
 Recipes:
 
@@ -86,7 +86,7 @@ User communication:
 
 - Rating and feedback on recipes(only display)
 
-### Bug Tracking & Reporting
+### 🐞 Bug Tracking & Reporting
 
 We are using **GitHub Issues** to track bugs in this project.
 
