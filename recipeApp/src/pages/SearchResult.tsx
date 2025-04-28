@@ -1,5 +1,5 @@
-import React, { useEffect,useState } from "react";
-import { useParams,useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../css/SearchResult.css";
 
 interface Recipe {
@@ -10,48 +10,63 @@ interface Recipe {
 }
 
 const SearchResult: React.FC = () => {
-  const [searchInput, setSearchInput] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // "확정된 검색어"
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-      const fetchRecipes = async () => {
-        try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
-          const data = await res.json();
-          setRecipes(data);
-        } catch (err) {
-          console.error("Error to fetch recipe:", err);
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      fetchRecipes();
+    const fetchRecipes = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
+        const data = await res.json();
+        setRecipes(data);
+      } catch (err) {
+        console.error("Error fetching recipes:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecipes();
   }, []);
-  
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value.toLowerCase());
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setSearchInput(inputValue.toLowerCase()); // Enter 누르면 searchInput 확정
+    }
+  };
+
+  const handleClick = (recipe: Recipe) => {
+    const path = `/recipes/detail/${encodeURIComponent(recipe.name)}`;
+    navigate(path);
   };
 
   const filteredRecipes = recipes.filter((recipe) =>
     recipe.name.toLowerCase().includes(searchInput)
   );
 
-  const navigate = useNavigate();
-  const handleClick = (recipe: Recipe) => {
-    const path = `/recipes/detail/${encodeURIComponent(recipe.name)}`;
-    navigate(path);
-  };
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
 
   return (
     <div className="search-result-page">
       <h1>Search Recipes</h1>
-      <p className="search-result-page-desc">Filter recipes by its name or Enter ingredients separated by commas (e.g., eggs, cheese, tomatoes):</p>
+      <p className="search-result-page-desc">
+        Filter recipes by its name or Enter ingredients separated by commas (e.g., eggs, cheese, tomatoes):
+      </p>
       <input
         type="text"
-        value={searchInput}
-        onChange={handleSearch}
+        value={inputValue}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyPress}  // <-- 추가!
         placeholder="Search by recipe name..."
         className="search-box"
       />
@@ -69,6 +84,6 @@ const SearchResult: React.FC = () => {
       </div>
     </div>
   );
-}
+};
 
 export default SearchResult;
