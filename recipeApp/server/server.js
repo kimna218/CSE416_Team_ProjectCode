@@ -29,7 +29,7 @@ const pool = new Pool({
 
 console.log("Success to connect");
 
-// 테이블 생성 (PostgreSQL용 문법)
+// 테이블 생성
 await pool.query(`
   CREATE TABLE IF NOT EXISTS recipes (
     id SERIAL PRIMARY KEY,
