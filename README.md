@@ -30,6 +30,78 @@ Implement AI features to provide recipes to the users.
 Ensure security and scalability for a better user experience.
 Make an online platform for public access.
 
-### Jira:
+### Trello:
 
-https://panhwa.atlassian.net/jira/software/projects/CP/summary
+https://trello.com/b/1B4X590E/cse416ai-powered-recipes
+
+### Project Setup Instructions (for New Developers)
+
+This project is currently running on a local development environment. The instructions below will help you get started with checking out the source code, building the software, and testing it locally.
+
+#### 1. 🔨 Clone the Repository
+
+https://github.com/jellyrgb/CSE416_ProjectCode.git
+or
+Open with the GitHub Desktop
+
+#### 2. 🔨 Install Dependencies
+
+- For React
+  cd src
+  npm install
+
+- For backend
+  cd server
+  npm install
+
+#### 3. 🛠️ Set Up and Run the Local Environment
+
+- Make sure to change .env file located in /src and /src/server path to your local information
+- Make sure MySQL is running
+- Create a new database if you are the first time to run this
+  sql> CREATE DATABASE recipe_db;
+
+- Run the Backend Server
+  cd src/server
+  node server.js
+
+- Run frontend
+  cd src
+  npm run dev
+
+#### 4. 🔖 Testing the System:
+
+Recipes:
+
+- Categorized by 'Rice', 'One Dish Meal', 'Soup', 'Dessert', 'Side Dish'
+- Checking nutrition data in the details page
+- Able to see the image of each meal
+- Sorted by nutritions
+
+Searching:
+
+- Searching recipes by name
+
+User communication:
+
+- Rating and feedback on recipes(only display)
+
+### 🐞 Bug Tracking & Reporting
+
+We are using **GitHub Issues** to track bugs in this project.
+
+#### How to check existing bugs
+
+1. Go to our GitHub repository
+2. Click on the `Issues` tab
+3. Filter by the label `bug` to see all known issues
+
+#### How to report a new bug
+
+1. Go to `Issues` > `New Issue`
+2. Choose the `Bug report` template (if available)
+3. Include:
+   - Steps to reproduce the bug
+   - Expected vs actual behavior
+   - Screenshot or error log (if possible)
+   - Your environment (browser/OS)
