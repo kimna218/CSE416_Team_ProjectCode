@@ -11,16 +11,12 @@ interface Recipe {
 
 const SearchResult: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
-  const [searchInput, setSearchInput] = useState(""); // "확정된 검색어"
+  const [searchInput, setSearchInput] = useState(""); 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasSearched, setHasSearched] = useState(false); 
 
   const navigate = useNavigate();
-
-  // loading state
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -44,7 +40,8 @@ const SearchResult: React.FC = () => {
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      setSearchInput(inputValue.toLowerCase()); // Enter 누르면 searchInput 확정
+      setSearchInput(inputValue.toLowerCase());
+      setHasSearched(true); 
     }
   };
 
@@ -71,20 +68,24 @@ const SearchResult: React.FC = () => {
         type="text"
         value={inputValue}
         onChange={handleInputChange}
-        onKeyDown={handleKeyPress}  // <-- 추가!
+        onKeyDown={handleKeyPress}
         placeholder="Search by recipe name..."
         className="search-box"
       />
       <div className="results-grid">
-        {filteredRecipes.length > 0 ? (
-          filteredRecipes.map((recipe, index) => (
-            <div key={index} className="recipe-card" onClick={() => handleClick(recipe)}>
-              <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
-              <p className="recipe-name">{recipe.name}</p>
-            </div>
-          ))
+        {hasSearched ? (
+          filteredRecipes.length > 0 ? (
+            filteredRecipes.map((recipe, index) => (
+              <div key={index} className="recipe-card" onClick={() => handleClick(recipe)}>
+                <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
+                <p className="recipe-name">{recipe.name}</p>
+              </div>
+            ))
+          ) : (
+            <p className="no-results">No recipes found. Try a different search.</p>
+          )
         ) : (
-          <p className="no-results">No recipes found. Try a different search.</p>
+          null
         )}
       </div>
     </div>
