@@ -17,6 +17,7 @@
     "firebase": "^11.6.1",
     "mysql2": "^3.14.1",
     "node-fetch": "^3.3.2",
+    "pg": "^8.15.6",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
     "react-dom": "^19.0.0",

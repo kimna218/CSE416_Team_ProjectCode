@@ -1,9 +1,10 @@
-// server.js (mysql2...로 했는데 상관없겠지?)
 import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
-import mysql from "mysql2/promise";
+import pkg from "pg";
+const { Pool } = pkg;
+
 dotenv.config();
 
 const app = express();
@@ -18,53 +19,39 @@ console.log({
   database: process.env.DB_NAME,
 });
 
-// DB에 연결
-const db = await mysql.createConnection({
+const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 });
+
 console.log("Success to connect");
 
-// * * * * * * * * *
-// *               *
-// * create table  *
-// *               *
-// * * * * * * * * *
-
-// recipe
-await db.execute(`
+// 테이블 생성 (PostgreSQL용 문법)
+await pool.query(`
   CREATE TABLE IF NOT EXISTS recipes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
     category VARCHAR(50),
     image_url VARCHAR(255)
   )
 `);
 
-// nutrition info
-await db.execute(`
+await pool.query(`
   CREATE TABLE IF NOT EXISTS nutrition (
-    recipe_id INT,
+    recipe_id INT REFERENCES recipes(id),
     calories INT,
     carbohydrates FLOAT,
     protein FLOAT,
     fat FLOAT,
     sodium FLOAT,
-    PRIMARY KEY (recipe_id),
-    FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+    PRIMARY KEY (recipe_id)
   )
 `);
 
 const apiKey = process.env.FOOD_API_KEY;
-
-// * * * * * * * * *
-// *               *
-// *   Store DB    *
-// *               *
-// * * * * * * * * *
 
 const importRecipesFromOpenAPI = async () => {
   try {
@@ -81,25 +68,22 @@ const importRecipesFromOpenAPI = async () => {
 
       if (name && category && image_url) {
         try {
-          // 1. recipe insert
-          await db.execute(
-            "INSERT IGNORE INTO recipes (name, category, image_url) VALUES (?, ?, ?)",
+          await pool.query(
+            "INSERT INTO recipes (name, category, image_url) VALUES ($1, $2, $3) ON CONFLICT (name) DO NOTHING",
             [name, category, image_url]
           );
 
-          // 2. recipe_id 가져오기
-          const [result] = await db.execute(
-            "SELECT id FROM recipes WHERE name = ?",
+          const result = await pool.query(
+            "SELECT id FROM recipes WHERE name = $1",
             [name]
           );
-          const recipe_id = result[0]?.id;
+          const recipe_id = result.rows[0]?.id;
 
-          // 3. nutrition insert
           if (recipe_id) {
             const nutrition = extractNutritionFromRecipe(recipe);
-            await db.execute(
-              `INSERT IGNORE INTO nutrition (recipe_id, calories, carbohydrates, protein, fat, sodium)
-               VALUES (?, ?, ?, ?, ?, ?)`,
+            await pool.query(
+              `INSERT INTO nutrition (recipe_id, calories, carbohydrates, protein, fat, sodium)
+               VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (recipe_id) DO NOTHING`,
               [
                 recipe_id,
                 nutrition.calories,
@@ -132,23 +116,17 @@ const extractNutritionFromRecipe = (recipe) => {
   };
 };
 
-
-// * * * * * * * * *
-// *               *
-// *   API Router  *
-// *               *
-// * * * * * * * * *
-
+// API 라우터
 app.get("/recipes", async (req, res) => {
-  const [rows] = await db.execute("SELECT * FROM recipes");
-  res.json(rows);
+  const result = await pool.query("SELECT * FROM recipes");
+  res.json(result.rows);
 });
 
 app.post("/recipes", async (req, res) => {
   const { name, category, image_url } = req.body;
   try {
-    await db.execute(
-      "INSERT IGNORE INTO recipes (name, category, image_url) VALUES (?, ?, ?)",
+    await pool.query(
+      "INSERT INTO recipes (name, category, image_url) VALUES ($1, $2, $3) ON CONFLICT (name) DO NOTHING",
       [name, category, image_url]
     );
     res.json({ success: true });
@@ -158,41 +136,37 @@ app.post("/recipes", async (req, res) => {
   }
 });
 
-// recipe detail가져오기
 app.get("/recipes/detail/:name", async (req, res) => {
-  const [rows] = await db.execute(
-    "SELECT * FROM recipes WHERE name = ?",
+  const result = await pool.query(
+    "SELECT * FROM recipes WHERE name = $1",
     [req.params.name]
   );
-  res.json(rows[0]); // 하나만 가져옴
+  res.json(result.rows[0]);
 });
 
-// get nutrition info
 app.get("/recipes/detail/:id/nutrition", async (req, res) => {
   const recipeId = parseInt(req.params.id, 10);
 
   try {
-    // nutrition 테이블에서 해당 recipe_id의 영양정보 조회
-    const [nutritionRows] = await db.execute(
+    const result = await pool.query(
       `SELECT calories, carbohydrates, protein, fat, sodium
        FROM nutrition
-       WHERE recipe_id = ?`,
+       WHERE recipe_id = $1`,
       [recipeId]
     );
 
-    if (nutritionRows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: "Nutrition info not found for this recipe." });
     }
 
-    res.json(nutritionRows[0]);
+    res.json(result.rows[0]);
   } catch (err) {
     console.error("Nutrition fetch error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-
-// 🔹 서버 시작
+// 서버 시작
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, async () => {
   try {
