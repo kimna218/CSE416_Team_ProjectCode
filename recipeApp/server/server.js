@@ -174,5 +174,4 @@ app.listen(PORT, async () => {
   } catch (err) {
     console.error("Cannot start server:", err);
   }
-  console.log(`Server is running on: http://localhost:${PORT}`);
 });
