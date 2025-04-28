@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import React, { useEffect,useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "../css/SearchResult.css";
 
 interface Recipe {
