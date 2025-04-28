@@ -1,5 +1,5 @@
 import React, { useEffect,useState } from "react";
-import { useParams,useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../css/SearchResult.css";
 
 interface Recipe {
@@ -13,6 +13,11 @@ const SearchResult: React.FC = () => {
   const [searchInput, setSearchInput] = useState("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // loading state
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
 
   useEffect(() => {
       const fetchRecipes = async () => {

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "../css/Profile.css";
 
 function Profile() {
-  const [user, setUser] = useState({
+  const [user] = useState({
     name: "John Doe",
     email: "johndoe@example.com",
     profileImage: "/images/default-profile.jpg",
