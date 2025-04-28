@@ -24,7 +24,8 @@ const RecipeDetails: React.FC = () => {
             const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${recipeName}`);
             const data = await res.json();
             setRecipe(data);
-    };
+        };
+        window.scrollTo(0, 0);
     fetchRecipe();
     }, [recipeName]);
 

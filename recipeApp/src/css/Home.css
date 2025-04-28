@@ -83,7 +83,7 @@
     font-size: 2rem;
     cursor: pointer;
     color: #91b6db;
-    transition: transform 0.2s ease;
+    transition: transform 0.1s ease;
 }
 
 .show-more-button:hover {
