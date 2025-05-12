@@ -105,3 +105,5 @@ We are using **GitHub Issues** to track bugs in this project.
    - Expected vs actual behavior
    - Screenshot or error log (if possible)
    - Your environment (browser/OS)
+
+Test auto deploy
