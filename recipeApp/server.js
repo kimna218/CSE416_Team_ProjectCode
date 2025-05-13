@@ -9,8 +9,6 @@ app.use(cors());
 app.use(express.json());
 
 console.log("Starting server...");
-console.log("Database URL:", process.env.DATABASE_URL);
-
 console.log("✅ FULL ENV DUMP:");
 for (const key of Object.keys(process.env)) {
   if (key.toLowerCase().includes("db") || key.toLowerCase().includes("pg")) {
@@ -18,19 +16,12 @@ for (const key of Object.keys(process.env)) {
   }
 }
 
-
 const pool = new Pool({
-  host: process.env.PGHOST,
-  port: Number(process.env.PGPORT),
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-  ssl: { rejectUnauthorized: false },
-
-  // ✅ IPv4 전용 DNS lookup 설정
-  lookup: (hostname, options, callback) => {
-    lookup(hostname, { family: 4 }, callback);
-  }
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 });
 
 console.log("Success to connect");
