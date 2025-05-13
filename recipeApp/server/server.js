@@ -11,14 +11,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-console.log("📡 Connecting to DB...");
-console.log({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+console.log("Starting server...");
+console.log("Database URL:", process.env.DATABASE_URL);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
