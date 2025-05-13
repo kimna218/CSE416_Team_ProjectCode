@@ -28,6 +28,11 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   ssl: {
     rejectUnauthorized: false,
+  },
+
+  connectionTimeoutMillis: 5000,
+  lookup: (hostname, options, callback) => {
+    require("dns").lookup(hostname, { family: 4 }, callback);
   }
 });
 
@@ -178,4 +183,16 @@ app.listen(PORT, async () => {
   } catch (err) {
     console.error("Cannot start server:", err);
   }
+});
+
+// React 정적 파일 서빙
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.resolve(__dirname, "../dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "../dist", "index.html"));
 });
