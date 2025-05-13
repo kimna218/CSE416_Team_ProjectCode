@@ -1,11 +1,8 @@
 import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
-import dotenv from "dotenv";
 import pkg from "pg";
 const { Pool } = pkg;
-
-dotenv.config();
 
 const app = express();
 app.use(cors());
