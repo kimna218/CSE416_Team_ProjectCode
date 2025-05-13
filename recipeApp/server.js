@@ -11,6 +11,14 @@ app.use(express.json());
 console.log("Starting server...");
 console.log("Database URL:", process.env.DATABASE_URL);
 
+console.log("✅ FULL ENV DUMP:");
+for (const key of Object.keys(process.env)) {
+  if (key.toLowerCase().includes("db") || key.toLowerCase().includes("pg")) {
+    console.log(`${key} = ${process.env[key]}`);
+  }
+}
+
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
