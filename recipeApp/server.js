@@ -20,9 +20,16 @@ for (const key of Object.keys(process.env)) {
 
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
+  host: process.env.PGHOST,
+  port: Number(process.env.PGPORT),
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE,
+  ssl: { rejectUnauthorized: false },
+
+  // ✅ IPv4 전용 DNS lookup 설정
+  lookup: (hostname, options, callback) => {
+    lookup(hostname, { family: 4 }, callback);
   }
 });
 
