@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
 import pkg from "pg";
+import dotenv from 'dotenv';
+dotenv.config();
 const { Pool } = pkg;
 
 const app = express();
@@ -32,7 +34,8 @@ await pool.query(`
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
     category VARCHAR(50),
-    image_url VARCHAR(255)
+    image_url VARCHAR(255),
+    ingredients TEXT
   )
 `);
 
@@ -45,6 +48,14 @@ await pool.query(`
     fat FLOAT,
     sodium FLOAT,
     PRIMARY KEY (recipe_id)
+  )
+`);
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS recipe_steps (
+    recipe_id INT REFERENCES recipes (id),
+    step_number INT,
+    description TEXT,
+    PRIMARY KEY (recipe_id, step_number)
   )
 `);
 
@@ -65,22 +76,33 @@ const importRecipesFromOpenAPI = async () => {
 
       if (name && category && image_url) {
         try {
-          await pool.query(
-            "INSERT INTO recipes (name, category, image_url) VALUES ($1, $2, $3) ON CONFLICT (name) DO NOTHING",
-            [name, category, image_url]
+          const ingredientsText = recipe.RCP_PARTS_DTLS;
+
+          const insertResult = await pool.query(
+            `INSERT INTO recipes (name, category, image_url, ingredients)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (name) DO NOTHING
+            RETURNING id`,
+            [name, category, image_url, ingredientsText]
           );
 
-          const result = await pool.query(
-            "SELECT id FROM recipes WHERE name = $1",
-            [name]
-          );
-          const recipe_id = result.rows[0]?.id;
+          let recipe_id = insertResult.rows[0]?.id;
 
+          if (!recipe_id) {
+            const selectResult = await pool.query(
+              "SELECT id FROM recipes WHERE name = $1",
+              [name]
+            );
+            recipe_id = selectResult.rows[0]?.id;
+          }
+
+          // nutrition insert
           if (recipe_id) {
             const nutrition = extractNutritionFromRecipe(recipe);
             await pool.query(
               `INSERT INTO nutrition (recipe_id, calories, carbohydrates, protein, fat, sodium)
-               VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (recipe_id) DO NOTHING`,
+              VALUES ($1, $2, $3, $4, $5, $6)
+              ON CONFLICT (recipe_id) DO NOTHING`,
               [
                 recipe_id,
                 nutrition.calories,
@@ -91,13 +113,37 @@ const importRecipesFromOpenAPI = async () => {
               ]
             );
           }
+
+          // // recipe_ingredients insert
+          // const ingredients = extractIngredientsFromRecipe(recipe);
+          // for (const ing of ingredients) {
+          //   await pool.query(
+          //     `INSERT INTO recipe_ingredients (recipe_id, ingredient_name, quantity)
+          //     VALUES ($1, $2, $3)
+          //     ON CONFLICT DO NOTHING`,
+          //     [recipe_id, ing.ingredient_name, ing.quantity]
+          //   );
+          // }
+
+          // recipe_steps insert
+          const steps = extractStepsFromRecipe(recipe);
+          for (const step of steps) {
+            await pool.query(
+              `INSERT INTO recipe_steps (recipe_id, step_number, description)
+              VALUES ($1, $2, $3)
+              ON CONFLICT DO NOTHING`,
+              [recipe_id, step.step_number, step.description]
+            );
+          }
+
         } catch (e) {
           console.warn("Fail to insert:", name, e.message);
         }
       }
+
     }
 
-    console.log("Complete storing recipes & nutrition from OpenAPI");
+    console.log("Complete storing details from OpenAPI");
   } catch (err) {
     console.error("OpenAPI fetch error:", err);
   }
@@ -111,6 +157,49 @@ const extractNutritionFromRecipe = (recipe) => {
     fat: parseFloat(recipe.INFO_FAT) || 0,
     sodium: parseFloat(recipe.INFO_NA) || 0,
   };
+};
+
+// const extractIngredientsFromRecipe = (recipe) => {
+//   const raw = recipe.RCP_PARTS_DTLS;
+//   if (!raw) return [];
+
+//   const lines = raw.split('\n');
+//   const ingredients = [];
+
+//   for (const line of lines) {
+//     const items = line.split(',');
+//     for (let item of items) {
+//       item = item.trim();
+//       if (!item) continue;
+
+//       // 예: "연두부 75g(3/4모)"
+//       const match = item.match(/^([^\d\s,]+)\s*(.+)$/);
+//       if (match) {
+//         const name = match[1].trim();
+//         const quantity = match[2].trim();
+//         ingredients.push({ ingredient_name: name, quantity });
+//       }
+//     }
+//   }
+
+//   return ingredients;
+// };
+
+const extractStepsFromRecipe = (recipe) => {
+  const steps = [];
+
+  for (let i = 1; i <= 20; i++) {
+    const raw = recipe[`MANUAL${i.toString().padStart(2, '0')}`];
+    if (raw && raw.trim() !== '') {
+      const cleaned = raw.trim().replace(/^\d+\.\s*/, '');  // "1. ~" 제거
+      steps.push({
+        step_number: i,
+        description: cleaned
+      });
+    }
+  }
+
+  return steps;
 };
 
 // API 라우터
@@ -162,6 +251,26 @@ app.get("/recipes/detail/:id/nutrition", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+app.get("/recipes/detail/:id/steps", async (req, res) => {
+  const recipeId = parseInt(req.params.id, 10);
+
+  try {
+    const result = await pool.query(
+      `SELECT step_number, description
+       FROM recipe_steps
+       WHERE recipe_id = $1
+       ORDER BY step_number`,
+      [recipeId]
+    );
+
+    res.json(result.rows); // 배열로 보냄
+  } catch (err) {
+    console.error("Fetch steps error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 // 서버 시작
 const PORT = process.env.PORT || 5001;

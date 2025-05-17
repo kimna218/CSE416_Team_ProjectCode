@@ -72,20 +72,26 @@
     color: #666;
 }
 
-.show-more-container {
+
+.pagination {
     display: flex;
     justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
 }
 
-.show-more-button {
-    background: none;
-    border: none;
-    font-size: 2rem;
+.pagination button {
+    margin: 0 4px;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    background-color: white;
     cursor: pointer;
-    color: #91b6db;
-    transition: transform 0.1s ease;
+    border-radius: 4px;
 }
 
-.show-more-button:hover {
-    transform: translateY(2px);
+.pagination .active-page {
+    background-color: #91b6db;
+    color: white;
+    font-weight: bold;
+    border-color: #91b6db;
 }

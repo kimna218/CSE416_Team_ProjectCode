@@ -7,6 +7,7 @@ interface Recipe {
   name: string;
   category: string;
   image_url: string;
+  ingredients: string;
 }
 
 const SearchResult: React.FC = () => {
@@ -50,9 +51,16 @@ const SearchResult: React.FC = () => {
     navigate(path);
   };
 
-  const filteredRecipes = recipes.filter((recipe) =>
-    recipe.name.toLowerCase().includes(searchInput)
+const filteredRecipes = recipes.filter((recipe) => {
+  const searchKeywords = searchInput.split(/[\s,]+/).map(k => k.trim()).filter(k => k.length > 0);
+
+  const recipeText = `${recipe.name} ${recipe.ingredients}`.toLowerCase(); // 이름 + 재료 전체 문자열 결합
+
+  return searchKeywords.some(keyword =>
+    recipeText.includes(keyword)
   );
+});
+
 
   if (loading) {
     return <div className="loading">Loading...</div>;
@@ -62,7 +70,7 @@ const SearchResult: React.FC = () => {
     <div className="search-result-page">
       <h1>Search Recipes</h1>
       <p className="search-result-page-desc">
-        Filter recipes by its name or Enter ingredients separated by commas (e.g., eggs, cheese, tomatoes):
+        Filter recipes by its name or Enter ingredients separated by space (e.g., 새우 계란 토마토):
       </p>
       <input
         type="text"

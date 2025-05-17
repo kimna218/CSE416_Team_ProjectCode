@@ -31,7 +31,6 @@ const RecipeList: React.FC = () => {
     fetchRecipes();
   }, []);
 
-  //흠.. 한국어로 되어있어서..일단은 예시로 바꿨어
   const categoryMap: Record<string, string> = {
     rice: "밥",
     oneDish: "일품",
@@ -40,7 +39,6 @@ const RecipeList: React.FC = () => {
     sideDish: "반찬",
   };
   const korCategory = categoryMap[category || ""] || category;
-  // console.log(" korCategory :", korCategory);
 
   const categoryRecipes = recipes.filter(
     (recipe) => recipe.category === korCategory

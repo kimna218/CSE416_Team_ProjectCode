@@ -7,48 +7,58 @@ interface Recipe {
   name: string;
   category: string;
   image_url: string;
+  ingredients: string;
+}
+
+interface Step {
+  step_number: number;
+  description: string;
+}
+
+interface Nutrition {
+  calories: number;
+  carbohydrates: number;
+  protein: number;
+  fat: number;
+  sodium: number;
 }
 
 const RecipeDetails: React.FC = () => {
     const [activeTab, setActiveTab] = useState<"instructions" | "ingredients">("instructions");
-
-//   나중에 openAPI에서 가져와야댐..
-//   const [manual, setManual] = useState<ManualStep[]>([]);
-//   const [loading, setLoading] = useState(true);
-
     const { recipeName } = useParams();
     const [recipe, setRecipe] = useState<Recipe | null>(null);
+    const [instructions, setInstructions] = useState<Step[]>([]);
+    const [nutrition, setNutrition] = useState<Nutrition | null>(null);
 
     useEffect(() => {
         const fetchRecipe = async () => {
             const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${recipeName}`);
             const data = await res.json();
             setRecipe(data);
+
+            if (data?.id) {
+                // instructions
+                const stepRes = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${data.id}/steps`);
+                const stepData = await stepRes.json();
+                setInstructions(stepData);
+
+                // nutrition
+                const nutRes = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${data.id}/nutrition`);
+                const nutData = await nutRes.json();
+                setNutrition(nutData);
+
+            } else {
+            console.warn("❗ recipe.id is missing or invalid:", data);
+            }
         };
         window.scrollTo(0, 0);
-    fetchRecipe();
+        fetchRecipe();
     }, [recipeName]);
 
     const [rating, setRating] = useState(0);        
     const [hoverRating, setHoverRating] = useState(0); 
     const [isFavorited, setIsFavorited] = useState(false);
     const [feedback, setFeedback] = useState("");
-
-
-    // 예시 데이터
-    const ingredients = [
-        "ingredient 1",
-        "ingredient 2",
-        "ingredient 3",
-        "ingredient 4"
-    ];
-
-    const instructions = [
-        "...",
-        "...",
-        "...",
-        "..."
-    ];
 
         const handleFeedbackSubmit = () => {
             if (feedback.trim() === "") {
@@ -111,27 +121,28 @@ const RecipeDetails: React.FC = () => {
                         <tbody>
                         <tr>
                             <td>Calory</td>
-                            <td>0 kcal</td>
+                            <td>{nutrition?.calories ?? 0} kcal</td>
                         </tr>
                         <tr>
                             <td>Carbohydrate</td>
-                            <td>0 g</td>
+                            <td>{nutrition?.carbohydrates ?? 0} g</td>
                         </tr>
                         <tr>
                             <td>Protein</td>
-                            <td>0 g</td>
+                            <td>{nutrition?.protein ?? 0} g</td>
                         </tr>
                         <tr>
                             <td>Fat</td>
-                            <td>0 g</td>
+                            <td>{nutrition?.fat ?? 0} g</td>
                         </tr>
                         <tr>
                             <td>Sodium</td>
-                            <td>0 mg</td>
+                            <td>{nutrition?.sodium ?? 0} mg</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
+
             </div>
 
             <div className="recipe-info-box">
@@ -151,16 +162,14 @@ const RecipeDetails: React.FC = () => {
                 </div>
 
                 <div className="tab-content">
-                    {activeTab === "instructions" ? (
-                    <ul>
-                        {instructions.map((step, i) => (
-                        <li key={i}><strong>Step {i + 1}:</strong> {step}</li>
-                        ))}
-                    </ul>
+                    {activeTab === "ingredients" ? (
+                    <div style={{ whiteSpace: "pre-wrap" }}>
+                        {recipe?.ingredients}
+                    </div>
                     ) : (
                     <ul>
-                        {ingredients.map((item, i) => (
-                        <li key={i}>• {item}</li>
+                        {instructions.map((step) => (
+                            <li key={step.step_number}><strong>Step {step.step_number}:</strong> {step.description}</li>
                         ))}
                     </ul>
                     )}
