@@ -10,14 +10,59 @@ function Profile() {
       { name: "Pancakes", image: "/images/pancakes.jpg" },
       { name: "Grilled Chicken", image: "/images/grilled-chicken.jpg" },
     ],
-    preferences: {
-      dietary: "Vegetarian",
-      dislikedIngredients: ["onions", "garlic"],
-    },
   });
 
-  const handleEditPreferences = () => {
-    alert("Edit preferences functionality coming soon!");
+  const [preferences, setPreferences] = useState({
+    dietary: "Vegetarian",
+    dislikedIngredients: ["onions", "garlic"],
+    likedIngredients: ["onions", "garlic"],
+  });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [dietaryInput, setDietaryInput] = useState(preferences.dietary);
+  const [dislikedInput, setDislikedInput] = useState("");
+  const [dislikedList, setDislikedList] = useState(preferences.dislikedIngredients);
+  const [likedList, setLikedList] = useState(preferences.likedIngredients);
+  const [likedInput, setLikedInput] = useState("");
+
+  const handleAddDislike = () => {
+    if (dislikedInput && !dislikedList.includes(dislikedInput)) {
+      setDislikedList([...dislikedList, dislikedInput]);
+      setDislikedInput("");
+    }
+  };
+
+  const handleAddLike = () => {
+    if (likedInput && !likedList.includes(likedInput)) {
+      setLikedList([...likedList, likedInput]);
+      setLikedInput("");
+    }
+  };
+
+  const handleRemoveDislike = (item: string) => {
+    setDislikedList(dislikedList.filter(i => i !== item));
+  };
+
+  const handleRemoveLike = (item: string) => {
+    setLikedList(likedList.filter(i => i !== item));
+  };
+
+  const handleSave = () => {
+    setPreferences({
+      dietary: dietaryInput,
+      dislikedIngredients: dislikedList,
+      likedIngredients: likedList,
+    });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setDietaryInput(preferences.dietary);
+    setDislikedList(preferences.dislikedIngredients);
+    setLikedList(preferences.likedIngredients);
+    setDislikedInput("");
+    setLikedInput("");
+    setIsEditing(false);
   };
 
   return (
@@ -46,14 +91,69 @@ function Profile() {
 
       <div className="profile-section">
         <h2>Preferences</h2>
-        <p><strong>Dietary Preference:</strong> {user.preferences.dietary}</p>
-        <p>
-          <strong>Disliked Ingredients:</strong>{" "}
-          {user.preferences.dislikedIngredients.join(", ")}
-        </p>
-        <button className="edit-button" onClick={handleEditPreferences}>
-          Edit Preferences
-        </button>
+
+        {isEditing ? (
+          <>
+            <div>
+              <label><strong>Dietary Preference:</strong></label><br />
+              <input
+                value={dietaryInput}
+                onChange={(e) => setDietaryInput(e.target.value)}
+              />
+            </div>
+
+            <div style={{ marginTop: "10px" }}>
+              <label><strong>Disliked Ingredients:</strong></label><br />
+              {dislikedList.map((item, idx) => (
+                <span key={idx} className="tag">
+                  {item}
+                  <button onClick={() => handleRemoveDislike(item)} style={{ marginLeft: 5 }}>x</button>
+                </span>
+              ))}
+
+              <div style={{ marginTop: 5 }}>
+                <input
+                  value={dislikedInput}
+                  onChange={(e) => setDislikedInput(e.target.value)}
+                  placeholder="Add ingredient"
+                />
+                <button onClick={handleAddDislike}>+ Add</button>
+              </div>
+            </div>
+
+            <div style={{ marginTop: "10px" }}>
+              <label><strong>Liked Ingredients:</strong></label><br />
+              {likedList.map((item, idx) => (
+                <span key={idx} className="tag">
+                  {item}
+                  <button onClick={() => handleRemoveLike(item)} style={{ marginLeft: 5 }}>x</button>
+                </span>
+              ))}
+
+              <div style={{ marginTop: 5 }}>
+                <input
+                  value={likedInput}
+                  onChange={(e) => setLikedInput(e.target.value)}
+                  placeholder="Add ingredient"
+                />
+                <button onClick={handleAddLike}>+ Add</button>
+              </div>
+            </div>
+
+
+            <div style={{ marginTop: "10px" }}>
+              <button onClick={handleSave} className="save-btn">Save</button>
+              <button onClick={handleCancel} className="cancel-btn">Cancel</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p><strong>Dietary Preference:</strong> {preferences.dietary}</p>
+            <p><strong>Disliked Ingredients:</strong> {preferences.dislikedIngredients.join(", ")}</p>
+            <p><strong>Liked Ingredients:</strong> {preferences.likedIngredients.join(", ")}</p>
+            <button className="edit-button" onClick={() => setIsEditing(true)}>Edit Preferences</button>
+          </>
+        )}
       </div>
     </div>
   );
