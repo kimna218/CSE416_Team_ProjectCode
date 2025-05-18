@@ -384,6 +384,25 @@ app.get("/users", async (req, res) => {
   }
 });
 
+app.put("/users/:firebase_uid", async (req, res) => {
+  const { firebase_uid } = req.params;
+  const { liked_ingredients, disliked_ingredients } = req.body;
+
+  try {
+    await pool.query(
+      `UPDATE users
+       SET liked_ingredients = $1,
+           disliked_ingredients = $2
+       WHERE firebase_uid = $3`,
+      [JSON.stringify(liked_ingredients), JSON.stringify(disliked_ingredients), firebase_uid]
+    );
+
+    res.status(200).json({ message: "Preferences updated" });
+  } catch (err) {
+    console.error("Error updating preferences:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 // 서버 시작
