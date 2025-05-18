@@ -71,6 +71,14 @@ await pool.query(`
 `);
 
 await pool.query(`
+  CREATE TABLE IF NOT EXISTS post_likes (
+    post_id INT REFERENCES posts(id) ON DELETE CASCADE,
+    likes INT DEFAULT 0,
+    PRIMARY KEY (post_id)
+  )
+`);
+
+await pool.query(`
   CREATE TABLE IF NOT EXISTS post_comments (
     id SERIAL PRIMARY KEY,
     post_id INT REFERENCES posts(id) ON DELETE CASCADE,
@@ -311,6 +319,17 @@ app.post("/posts", async (req, res) => {
     console.error("Failed to insert post:", err);
     res.status(500).json({ error: "Failed to insert post" });
   }
+});
+
+app.post("/posts/:postId/like", async (req, res) => {
+  const postId = parseInt(req.params.postId);
+  await pool.query(`
+    INSERT INTO post_likes (post_id, likes)
+    VALUES ($1, 1)
+    ON CONFLICT (post_id)
+    DO UPDATE SET likes = post_likes.likes + 1
+  `, [postId]);
+  res.json({ success: true });
 });
 
 app.get("/posts/:postId/comments", async (req, res) => {

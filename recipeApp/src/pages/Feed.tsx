@@ -22,19 +22,36 @@ const Feed: React.FC = () => {
   const [comments, setComments] = useState<Record<number, Comment[]>>({});
   const [newCommentText, setNewCommentText] = useState<Record<number, string>>({});
   const [newPostCaption, setNewPostCaption] = useState('');
-  const [newPostImageUrl, setNewPostImageUrl] = useState('');
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [likes, setLikes] = useState<Record<number, number>>({});
+  const [uploadMessage, setUploadMessage] = useState<string>('');
 
-  const toggleComments = async (postId: number) => {
-    setShowComments(prev => ({ ...prev, [postId]: !prev[postId] }));
+  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dlm1w7msc/image/upload';
+  const CLOUDINARY_PRESET = 'ml_default';
 
-    if (!comments[postId]) {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/comments`);
-        const data = await res.json();
-        setComments(prev => ({ ...prev, [postId]: data }));
-      } catch (err) {
-        console.error('Failed to load comments:', err);
-      }
+  const uploadImageToCloudinary = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_PRESET);
+
+    try {
+      setIsUploading(true);
+      const res = await fetch(CLOUDINARY_URL, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      setUploadMessage('✅ Upload successful!');
+      return data.secure_url;
+    } catch (err) {
+      console.error('Cloudinary upload failed:', err);
+      setUploadMessage('❌ Upload failed. Please try again.');
+      return null;
+    } finally {
+      setIsUploading(false);
+      setTimeout(() => setUploadMessage(''), 3000);
     }
   };
 
@@ -43,13 +60,51 @@ const Feed: React.FC = () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`);
       const data = await res.json();
       setPosts(data);
+
+      // 좋아요 수 초기화
+      const likesRes = await fetch(`${import.meta.env.VITE_API_URL}/posts/likes`);
+      const likeData = await likesRes.json();
+      const likeMap: Record<number, number> = {};
+      likeData.forEach((item: { post_id: number; likes: number }) => {
+        likeMap[item.post_id] = item.likes;
+      });
+      setLikes(likeMap);
     } catch (err) {
-      console.error('Failed to fetch posts:', err);
+      console.error('Failed to fetch posts or likes:', err);
+    }
+  };
+
+  const toggleComments = async (postId: number) => {
+    setShowComments((prev) => ({ ...prev, [postId]: !prev[postId] }));
+
+    if (!comments[postId]) {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/comments`);
+        const data = await res.json();
+        setComments((prev) => ({ ...prev, [postId]: data }));
+      } catch (err) {
+        console.error('Failed to load comments:', err);
+      }
+    }
+  };
+
+  const handleLike = async (postId: number) => {
+    const likedKey = `liked_${postId}`;
+    if (localStorage.getItem(likedKey)) return;
+
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/like`, { method: 'POST' });
+      setLikes((prev) => ({ ...prev, [postId]: (prev[postId] || 0) + 1 }));
+      localStorage.setItem(likedKey, 'true');
+    } catch (err) {
+      console.error('Failed to like post:', err);
     }
   };
 
   const handleNewPost = async () => {
-    if (!newPostCaption || !newPostImageUrl) return;
+    if (!newPostCaption || !uploadFile) return;
+    const imageUrl = await uploadImageToCloudinary(uploadFile);
+    if (!imageUrl) return;
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
@@ -58,14 +113,15 @@ const Feed: React.FC = () => {
         body: JSON.stringify({
           username: 'cook_lover',
           caption: newPostCaption,
-          image_url: newPostImageUrl,
+          image_url: imageUrl,
         }),
       });
 
       const newPost = await res.json();
-      setPosts(prev => [newPost, ...prev]);
+      setPosts((prev) => [newPost, ...prev]);
       setNewPostCaption('');
-      setNewPostImageUrl('');
+      setUploadFile(null);
+      setPreviewUrl(null);
     } catch (err) {
       console.error('Failed to upload post:', err);
     }
@@ -86,11 +142,11 @@ const Feed: React.FC = () => {
       });
 
       const newComment = await res.json();
-      setComments(prev => ({
+      setComments((prev) => ({
         ...prev,
         [postId]: [...(prev[postId] || []), newComment],
       }));
-      setNewCommentText(prev => ({ ...prev, [postId]: '' }));
+      setNewCommentText((prev) => ({ ...prev, [postId]: '' }));
     } catch (err) {
       console.error('Failed to submit comment:', err);
     }
@@ -105,20 +161,45 @@ const Feed: React.FC = () => {
       <section className="upload-section">
         <textarea
           value={newPostCaption}
-          onChange={e => setNewPostCaption(e.target.value)}
+          onChange={(e) => setNewPostCaption(e.target.value)}
           placeholder="Share what you cooked today..."
         />
-        <input
-          type="text"
-          value={newPostImageUrl}
-          onChange={e => setNewPostImageUrl(e.target.value)}
-          placeholder="Paste image URL here"
-        />
-        <button className="upload-btn" onClick={handleNewPost}>Upload</button>
+
+        <div
+          className="upload-dropzone styled-dropzone"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file) {
+              setUploadFile(file);
+              setPreviewUrl(URL.createObjectURL(file));
+            }
+          }}
+        >
+          <p>Drag & Drop your image here</p>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setUploadFile(file);
+                setPreviewUrl(URL.createObjectURL(file));
+              }
+            }}
+          />
+        </div>
+
+        {previewUrl && <img src={previewUrl} alt="Preview" className="post-image" />}
+        {uploadMessage && <p>{uploadMessage}</p>}
+        <button className="upload-btn" onClick={handleNewPost} disabled={isUploading}>
+          {isUploading ? 'Uploading...' : 'Upload'}
+        </button>
       </section>
 
       <section className="post-grid">
-        {posts.map(post => (
+        {posts.map((post) => (
           <div key={post.id} className="post-card">
             <img src={post.image_url} alt="food" className="post-image" />
             <div className="post-info">
@@ -126,7 +207,9 @@ const Feed: React.FC = () => {
               <p className="post-caption">{post.caption}</p>
             </div>
             <div className="post-actions">
-              <button className="like-btn">❤️ Like</button>
+              <button className="like-btn" onClick={() => handleLike(post.id)}>
+                ❤️ Like {likes[post.id] || 0}
+              </button>
               <button className="comment-toggle" onClick={() => toggleComments(post.id)}>
                 💬 Comment
               </button>
@@ -143,7 +226,7 @@ const Feed: React.FC = () => {
                   placeholder="Write a comment..."
                   value={newCommentText[post.id] || ''}
                   onChange={(e) =>
-                    setNewCommentText(prev => ({ ...prev, [post.id]: e.target.value }))
+                    setNewCommentText((prev) => ({ ...prev, [post.id]: e.target.value }))
                   }
                 />
                 <button onClick={() => handleCommentSubmit(post.id)}>Submit</button>
