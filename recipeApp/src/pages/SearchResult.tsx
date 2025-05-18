@@ -1,6 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import "../css/SearchResult.css";
+
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+    SpeechRecognition: any;
+  }
+}
+type SpeechRecognitionType = typeof window.webkitSpeechRecognition;
 
 interface Recipe {
   id: number;
@@ -11,13 +19,63 @@ interface Recipe {
 }
 
 const SearchResult: React.FC = () => {
-  const [inputValue, setInputValue] = useState("");
-  const [searchInput, setSearchInput] = useState(""); 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialQuery = searchParams.get("query") || "";
+
+  const [inputValue, setInputValue] = useState(initialQuery);
+  const [searchInput, setSearchInput] = useState(initialQuery.toLowerCase());
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hasSearched, setHasSearched] = useState(false); 
+  const [hasSearched, setHasSearched] = useState(!!initialQuery);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<InstanceType<SpeechRecognitionType> | null>(null);
 
   const navigate = useNavigate();
+
+  // 🧠 음성 인식 초기화
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.error("Web Speech API not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ko-KR";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: SpeechRecognitionType) => {
+      const transcript = event.results[0][0].transcript;
+      setInputValue(transcript);
+      setSearchInput(transcript.toLowerCase());
+      setSearchParams({ query: transcript });
+      setHasSearched(true);
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+  }, [setSearchParams]);
+
+  const handleVoiceSearch = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      recognitionRef.current?.start();
+      setIsListening(true);
+    }
+  };
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -40,9 +98,10 @@ const SearchResult: React.FC = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       setSearchInput(inputValue.toLowerCase());
-      setHasSearched(true); 
+      setSearchParams({ query: inputValue });
+      setHasSearched(true);
     }
   };
 
@@ -51,16 +110,11 @@ const SearchResult: React.FC = () => {
     navigate(path);
   };
 
-const filteredRecipes = recipes.filter((recipe) => {
-  const searchKeywords = searchInput.split(/[\s,]+/).map(k => k.trim()).filter(k => k.length > 0);
-
-  const recipeText = `${recipe.name} ${recipe.ingredients}`.toLowerCase(); // 이름 + 재료 전체 문자열 결합
-
-  return searchKeywords.some(keyword =>
-    recipeText.includes(keyword)
-  );
-});
-
+  const filteredRecipes = recipes.filter((recipe) => {
+    const searchKeywords = searchInput.split(/[\s,]+/).map(k => k.trim()).filter(k => k.length > 0);
+    const recipeText = `${recipe.name} ${recipe.ingredients}`.toLowerCase();
+    return searchKeywords.some(keyword => recipeText.includes(keyword));
+  });
 
   if (loading) {
     return <div className="loading">Loading...</div>;
@@ -70,16 +124,22 @@ const filteredRecipes = recipes.filter((recipe) => {
     <div className="search-result-page">
       <h1>Search Recipes</h1>
       <p className="search-result-page-desc">
-        Filter recipes by its name or Enter ingredients separated by space (e.g., 새우 계란 토마토):
+        Filter recipes by its name or enter ingredients separated by space (e.g., 새우 계란 토마토):
       </p>
-      <input
-        type="text"
-        value={inputValue}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyPress}
-        placeholder="Search by recipe name..."
-        className="search-box"
-      />
+      <div className="search-controls">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyPress}
+          placeholder="Enter input..."
+          className="search-box"
+        />
+        <button className="mic-icon-button" onClick={handleVoiceSearch}>
+          {isListening ? "🎙️ Listening ..." : "🎤 Voice Search"}
+        </button>
+      </div>
+
       <div className="results-grid">
         {hasSearched ? (
           filteredRecipes.length > 0 ? (
@@ -92,9 +152,7 @@ const filteredRecipes = recipes.filter((recipe) => {
           ) : (
             <p className="no-results">No recipes found. Try a different search.</p>
           )
-        ) : (
-          null
-        )}
+        ) : null}
       </div>
     </div>
   );
