@@ -88,6 +88,18 @@ await pool.query(`
   )
 `);
 
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    firebase_uid VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
+    nickname VARCHAR(50) NOT NULL,
+    liked_ingredients TEXT,
+    disliked_ingredients TEXT,
+    favorite_recipes TEXT
+  )
+`);
+
 
 const apiKey = process.env.FOOD_API_KEY;
 
@@ -144,17 +156,6 @@ const importRecipesFromOpenAPI = async () => {
             );
           }
 
-          // // recipe_ingredients insert
-          // const ingredients = extractIngredientsFromRecipe(recipe);
-          // for (const ing of ingredients) {
-          //   await pool.query(
-          //     `INSERT INTO recipe_ingredients (recipe_id, ingredient_name, quantity)
-          //     VALUES ($1, $2, $3)
-          //     ON CONFLICT DO NOTHING`,
-          //     [recipe_id, ing.ingredient_name, ing.quantity]
-          //   );
-          // }
-
           // recipe_steps insert
           const steps = extractStepsFromRecipe(recipe);
           for (const step of steps) {
@@ -188,32 +189,6 @@ const extractNutritionFromRecipe = (recipe) => {
     sodium: parseFloat(recipe.INFO_NA) || 0,
   };
 };
-
-// const extractIngredientsFromRecipe = (recipe) => {
-//   const raw = recipe.RCP_PARTS_DTLS;
-//   if (!raw) return [];
-
-//   const lines = raw.split('\n');
-//   const ingredients = [];
-
-//   for (const line of lines) {
-//     const items = line.split(',');
-//     for (let item of items) {
-//       item = item.trim();
-//       if (!item) continue;
-
-//       // 예: "연두부 75g(3/4모)"
-//       const match = item.match(/^([^\d\s,]+)\s*(.+)$/);
-//       if (match) {
-//         const name = match[1].trim();
-//         const quantity = match[2].trim();
-//         ingredients.push({ ingredient_name: name, quantity });
-//       }
-//     }
-//   }
-
-//   return ingredients;
-// };
 
 const extractStepsFromRecipe = (recipe) => {
   const steps = [];
@@ -355,6 +330,57 @@ app.post("/posts/:postId/comments", async (req, res) => {
   } catch (err) {
     console.error("Failed to insert comment:", err);
     res.status(500).json({ error: "Failed to insert comment" });
+  }
+});
+
+
+/* * * * * * * * */
+/*     Users     */
+/* * * * * * * * */
+
+app.get("/users/:firebase_uid", async (req, res) => {
+  const { firebase_uid } = req.params;
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE firebase_uid = $1", [firebase_uid]);
+    if (result.rows.length > 0) {
+      res.json({ exists: true, user: result.rows[0] });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (err) {
+    console.error("Error checking user:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/users/register", async (req, res) => {
+  const {firebase_uid,email,nickname,liked_ingredients,disliked_ingredients} = req.body;
+
+  const liked = JSON.stringify(liked_ingredients);
+  const disliked = JSON.stringify(disliked_ingredients);
+  const favorite = JSON.stringify([]); 
+
+  try {
+    await pool.query(
+      `INSERT INTO users (firebase_uid,email,nickname,liked_ingredients,disliked_ingredients,favorite_recipes
+      ) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [firebase_uid, email, nickname, liked, disliked, favorite]
+    );
+
+    res.status(201).json({ message: "User registered" });
+  } catch (err) {
+    console.error("Error registering user:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/users", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM users");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

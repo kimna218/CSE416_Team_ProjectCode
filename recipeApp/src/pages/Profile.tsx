@@ -1,16 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../css/Profile.css";
+import { getAuth, signOut, User } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 function Profile() {
-  const [user] = useState({
-    name: "John Doe",
-    email: "johndoe@example.com",
-    profileImage: "/images/default-profile.jpg",
-    favoriteRecipes: [
-      { name: "Pancakes", image: "/images/pancakes.jpg" },
-      { name: "Grilled Chicken", image: "/images/grilled-chicken.jpg" },
-    ],
-  });
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
 
   const [preferences, setPreferences] = useState({
     dietary: "Vegetarian",
@@ -24,6 +19,30 @@ function Profile() {
   const [dislikedList, setDislikedList] = useState(preferences.dislikedIngredients);
   const [likedList, setLikedList] = useState(preferences.likedIngredients);
   const [likedInput, setLikedInput] = useState("");
+
+  useEffect(() => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUser({
+        name: currentUser.displayName || "Anonymous",
+        email: currentUser.email || "",
+        profileImage: currentUser.photoURL || "/images/default-profile.jpg",
+        favoriteRecipes: [], // TODO: 백엔드 연동 시 불러오기
+      });
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(getAuth());
+      alert("Successfully Logged Out.");
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout failed", err);
+      alert("Failed to logout. Please try again.");
+    }
+  };
 
   const handleAddDislike = () => {
     if (dislikedInput && !dislikedList.includes(dislikedInput)) {
@@ -65,6 +84,8 @@ function Profile() {
     setIsEditing(false);
   };
 
+  if (!user) return <p>Loading profile...</p>;
+
   return (
     <div className="profile-page">
       <div className="profile-header">
@@ -75,17 +96,22 @@ function Profile() {
         />
         <h1>{user.name}</h1>
         <p>{user.email}</p>
+        <button className="logout-button" onClick={handleLogout}>Logout</button>
       </div>
 
       <div className="profile-section">
         <h2>Favorite Recipes</h2>
         <div className="favorite-recipes">
-          {user.favoriteRecipes.map((recipe, index) => (
-            <div key={index} className="recipe-card">
-              <img src={recipe.image} alt={recipe.name} className="recipe-image" />
-              <p className="recipe-name">{recipe.name}</p>
-            </div>
-          ))}
+          {user.favoriteRecipes.length === 0 ? (
+            <p>No favorite recipes yet.</p>
+          ) : (
+            user.favoriteRecipes.map((recipe: any, index: number) => (
+              <div key={index} className="recipe-card">
+                <img src={recipe.image} alt={recipe.name} className="recipe-image" />
+                <p className="recipe-name">{recipe.name}</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -139,7 +165,6 @@ function Profile() {
                 <button onClick={handleAddLike}>+ Add</button>
               </div>
             </div>
-
 
             <div style={{ marginTop: "10px" }}>
               <button onClick={handleSave} className="save-btn">Save</button>

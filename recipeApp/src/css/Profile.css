@@ -86,3 +86,18 @@
 .edit-button:hover {
   background-color: #ffe2d1;
 }
+
+.logout-button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #ffe2d1;
+  color: rgb(7, 7, 7);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.logout-button:hover {
+  background-color: #ffe2d1;
+}
