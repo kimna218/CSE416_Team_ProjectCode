@@ -1,7 +1,7 @@
 import React from 'react';
 import AppNavbar from './components/Navbar';
 import Home from './pages/Home';
-import Ingredient from './pages/Ingredient';
+import Feed from './pages/Feed';
 import Category from './pages/Category';
 import SearchResult from './pages/SearchResult';
 import Profile from './pages/Profile';
@@ -18,7 +18,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/ingredient" element={<Ingredient />} />
+          <Route path="/feed" element={<Feed />} />
           <Route path="/category" element={<Category />} />
           <Route path="/recipes/:category" element={<RecipeList />} />
           <Route path="/search-result" element={<SearchResult />} />

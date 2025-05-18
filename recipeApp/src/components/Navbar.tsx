@@ -24,7 +24,7 @@ const AppNavbar: React.FC = () => {
         <Nav className="mx-auto navbar-buttons">
           <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/home')}>Home</Button>
           <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/category')}>Category</Button>
-          <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/ingredient')}>Ingredient</Button>
+          <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/feed')}>Feed</Button>
         </Nav>
 
         <Form className="d-flex align-items-center navbar-icons">

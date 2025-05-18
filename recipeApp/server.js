@@ -59,6 +59,28 @@ await pool.query(`
   )
 `);
 
+// Feed Page
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS posts (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    caption TEXT,
+    image_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS post_comments (
+    id SERIAL PRIMARY KEY,
+    post_id INT REFERENCES posts(id) ON DELETE CASCADE,
+    username VARCHAR(100) NOT NULL,
+    text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+
 const apiKey = process.env.FOOD_API_KEY;
 
 const importRecipesFromOpenAPI = async () => {
@@ -270,6 +292,53 @@ app.get("/recipes/detail/:id/steps", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+app.get("/posts", async (req, res) => {
+  const result = await pool.query("SELECT * FROM posts ORDER BY created_at DESC");
+  res.json(result.rows);
+});
+
+app.post("/posts", async (req, res) => {
+  const { username, caption, image_url } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO posts (username, caption, image_url)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [username, caption, image_url]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Failed to insert post:", err);
+    res.status(500).json({ error: "Failed to insert post" });
+  }
+});
+
+app.get("/posts/:postId/comments", async (req, res) => {
+  const postId = parseInt(req.params.postId, 10);
+  const result = await pool.query(
+    `SELECT * FROM post_comments
+     WHERE post_id = $1 ORDER BY created_at`,
+    [postId]
+  );
+  res.json(result.rows);
+});
+
+app.post("/posts/:postId/comments", async (req, res) => {
+  const postId = parseInt(req.params.postId, 10);
+  const { username, text } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO post_comments (post_id, username, text)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [postId, username, text]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Failed to insert comment:", err);
+    res.status(500).json({ error: "Failed to insert comment" });
+  }
+});
+
 
 
 // 서버 시작
