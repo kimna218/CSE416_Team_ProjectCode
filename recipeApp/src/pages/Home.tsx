@@ -4,8 +4,9 @@ import "../css/Home.css";
 
 const popularRecipes = [
   { name: "Pancakes", image: "/images/pancakes.jpg" },
-  { name: "Grilled Chicken", image: "/images/grilled-chicken.jpg" },
-  { name: "Chocolate Cake", image: "/images/chocolate-cake.jpg" },
+  { name: "Omelette", image: "/images/omelette.jpg" },
+  { name: "Vanilla Ice Cream", image: "/images/dessert.jpg" },
+  { name: "Fried Eggs", image: "/images/breakfast.jpg" },
 ];
 
 interface Recipe {
@@ -31,7 +32,7 @@ function Home() {
   const [sortKey, setSortKey] = useState<string>("protein");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const recipesPerPage = 10;
+  const recipesPerPage = 12;
 
   useEffect(() => {
     const fetchRecipesWithNutrition = async () => {
@@ -99,18 +100,19 @@ function Home() {
 
       <div className="categories-preview">
         <h2>Recommendation Recipes</h2>
-        <div className="category-grid">
+        <div className="home-category-grid">
           {/* 추천 레시피 영역 (추후 구현) */}
+          <p>Coming Soon...</p>
         </div>
       </div>
 
       <div className="popular-recipes">
         <h2>Popular Recipes</h2>
-        <div className="recipe-grid">
+        <div className="home-recipe-grid">
           {popularRecipes.map((recipe, index) => (
-            <div key={index} className="recipe-card">
-              <img src={recipe.image} alt={recipe.name} className="recipe-image" />
-              <p className="recipe-name">{recipe.name}</p>
+            <div key={index} className="popular-recipe-card">
+              <img src={recipe.image} alt={recipe.name} className="popular-recipe-image" />
+              <p className="home-recipe-name">{recipe.name}</p>
             </div>
           ))}
         </div>
@@ -123,7 +125,7 @@ function Home() {
           value={sortKey}
           onChange={(e) => {
             setSortKey(e.target.value);
-            setCurrentPage(1); // 정렬 시 페이지 초기화
+            setCurrentPage(1);
           }}
         >
           <option value="protein">High Protein</option>
@@ -134,11 +136,11 @@ function Home() {
         </select>
       </div>
 
-      <div className="category-grid">
+      <div className="home-category-grid">
         {currentRecipes.map((recipe) => (
-          <div key={recipe.id} className="recipe-card" onClick={() => handleClick(recipe)}>
-            <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
-            <p className="recipe-name">{recipe.name}</p>
+          <div key={recipe.id} className="home-recipe-card" onClick={() => handleClick(recipe)}>
+            <img src={recipe.image_url} alt={recipe.name} className="home-recipe-image" />
+            <p className="home-recipe-name">{recipe.name}</p>
             <p className="nutrition-info">
               {`Protein: ${recipe.protein.toFixed(1)}g | Carbs: ${recipe.carbohydrates.toFixed(1)}g | Fat: ${recipe.fat.toFixed(1)}g | Sodium: ${recipe.sodium.toFixed(1)}mg | Calories: ${recipe.calories}`}
             </p>

@@ -13,10 +13,8 @@ const AppNavbar: React.FC = () => {
       <Container>
         <Navbar.Brand href="#" className="navbar-logo">
           <img
-            src="/images/logo.jpg"
+            src="/images/logo.png"
             alt="Logo"
-            width="40"
-            height="40"
             className="d-inline-block align-top"
           />
         </Navbar.Brand>

@@ -1,6 +1,8 @@
 .recipe-detail-page {
-    padding-top: 100px;
-    padding-left: 10%;    
+    font-family: 'Inter', sans-serif;
+    width: 100vw;
+    padding: 80px 80px;
+    padding-right: 100px;
 }
 
 .recipe-image-nutrition-content {
@@ -10,14 +12,12 @@
     padding-bottom: 5%;
 }
 
-
 .recipe-detail-image {
     width: 100%;
     max-width: 400px;
     border-radius: 30px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
-
 
 .tab-buttons {
     display: flex;
@@ -28,17 +28,15 @@
 .tab-buttons button {
     padding: 0.5rem 1.5rem;
     font-weight: bold;
-    border: 2px solid #110101;
-    background: rgb(250, 246, 246);
-    color: rgb(21, 2, 2);
+    background: #edf4ff;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 10px;
     transition: background 0.3s;
 }
 
 .tab-buttons button.active {
-    background: #91b6db;
-    color: rgb(21, 2, 2);
+    background: #0d6efd;
+    color: white;
 }
 
 .tab-content {
@@ -138,11 +136,17 @@
 
 .feedback-box button {
     margin-top: 8px;
-    padding: 6px 12px;
-    background-color: #91b6db;
+    padding: 8px 16px;
+    background-color: #0d6efd;
     border: none;
-    border-radius: 4px;
+    border-radius: 10px;
     cursor: pointer;
+    color: white;
+    font-weight: bold;
+}
+
+.feedback-box button:hover {
+    background-color: #0b5ed7;
 }
 
 .recipe-title-box {
