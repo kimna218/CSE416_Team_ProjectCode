@@ -7,14 +7,12 @@ dotenv.config();
 
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 const { Pool } = pkg;
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "https://recipes-416.onrender.com",
+}));
 app.use(express.json());
 
 console.log("Starting server...");
@@ -24,6 +22,10 @@ for (const key of Object.keys(process.env)) {
     console.log(`${key} = ${process.env[key]}`);
   }
 }
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 const pool = new Pool({
   user: process.env.DB_USER,
