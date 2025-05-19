@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import pkg from "pg";
 import dotenv from 'dotenv';
 dotenv.config();
+
 const { Pool } = pkg;
 
 const app = express();
@@ -28,7 +29,9 @@ const pool = new Pool({
 
 console.log("Success to connect");
 
-// 테이블 생성
+
+// CREATE TABLES
+// Recipe Page
 await pool.query(`
   CREATE TABLE IF NOT EXISTS recipes (
     id SERIAL PRIMARY KEY,
@@ -88,6 +91,7 @@ await pool.query(`
 );
 `);
 
+// User Page
 await pool.query(`
   CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -224,7 +228,8 @@ const extractStepsFromRecipe = (recipe) => {
   return steps;
 };
 
-// API 라우터
+
+// API Routers
 app.get("/recipes", async (req, res) => {
   const result = await pool.query("SELECT * FROM recipes");
   res.json(result.rows);
@@ -286,7 +291,7 @@ app.get("/recipes/detail/:id/steps", async (req, res) => {
       [recipeId]
     );
 
-    res.json(result.rows); // 배열로 보냄
+    res.json(result.rows);
   } catch (err) {
     console.error("Fetch steps error:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -317,6 +322,10 @@ app.post("/posts/:postId/like", async (req, res) => {
   const { firebase_uid } = req.body;
   const postId = parseInt(req.params.postId);
 
+  if (!firebase_uid) {
+    return res.status(400).json({ error: "firebase_uid is required" });
+  }
+
   try {
     const check = await pool.query(
       `SELECT * FROM post_likes WHERE post_id = $1 AND firebase_uid = $2`,
@@ -324,20 +333,18 @@ app.post("/posts/:postId/like", async (req, res) => {
     );
 
     if (check.rows.length > 0) {
-      // 이미 좋아요 누른 상태 -> 삭제
       await pool.query(
         `DELETE FROM post_likes WHERE post_id = $1 AND firebase_uid = $2`,
         [postId, firebase_uid]
       );
-      return res.json({ liked: false }); // 취소됨
+      return res.json({ liked: false });
     } else {
-      // 좋아요 안 누른 상태 -> 추가
       await pool.query(
         `INSERT INTO post_likes (post_id, firebase_uid)
          VALUES ($1, $2)`,
         [postId, firebase_uid]
       );
-      return res.json({ liked: true }); // 좋아요 추가됨
+      return res.json({ liked: true });
     }
   } catch (err) {
     console.error("Failed to toggle like:", err);
@@ -345,7 +352,7 @@ app.post("/posts/:postId/like", async (req, res) => {
   }
 });
 
-// 전체 포스트별 좋아요 수
+// All posts with like counts
 app.get("/posts/likes", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -360,7 +367,7 @@ app.get("/posts/likes", async (req, res) => {
   }
 });
 
-// 특정 유저가 좋아요한 포스트 목록
+// Get all posts liked by a specific user
 app.get("/users/:firebase_uid/likes", async (req, res) => {
   const { firebase_uid } = req.params;
   try {

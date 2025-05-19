@@ -132,20 +132,19 @@ const Feed: React.FC = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uid }), // 서버가 uid 필요하면
+          body: JSON.stringify({ firebase_uid: uid }),
         }
       );
+
       const result = await res.json();
 
-      const liked = result.liked; // 서버가 true/false 반환한다고 가정
-
+      const liked = result.liked;
       setLikes((prev) => ({
         ...prev,
         [postId]: liked
           ? (prev[postId] || 0) + 1
           : Math.max((prev[postId] || 1) - 1, 0),
       }));
-
       setUserLikes((prev) => ({
         ...prev,
         [postId]: liked,
