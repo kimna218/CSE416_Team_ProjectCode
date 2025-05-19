@@ -39,6 +39,7 @@ const RecipeDetails: React.FC = () => {
     { user_id: string; nickname: string; rating: number; feedback: string; rated_at: string }[]
   >([]);
   const [isEditingFeedback, setIsEditingFeedback] = useState(false);
+  const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -87,7 +88,10 @@ const RecipeDetails: React.FC = () => {
         .then((res) => res.json())
         .then((data) => {
           if (data.rating) setRating(data.rating);
-          if (data.feedback) setFeedback(data.feedback);
+          if (data.feedback) {
+            setFeedback(data.feedback);
+            setHasSubmittedFeedback(true);
+          }
         })
         .catch((err) => console.error("Failed to fetch rating:", err));
     }
@@ -119,6 +123,7 @@ const RecipeDetails: React.FC = () => {
 
       alert("Thanks for your feedback!");
       setIsEditingFeedback(false);
+      setHasSubmittedFeedback(true);
 
       const updatedFeedbacks = await fetch(`${import.meta.env.VITE_API_URL}/recipes/${recipe?.id}/feedbacks`);
       setFeedbackList(await updatedFeedbacks.json());
@@ -224,7 +229,7 @@ const RecipeDetails: React.FC = () => {
         <div className="feedback-box">
           <label htmlFor="feedback">Your Feedback:</label>
 
-          {!feedback ? (
+          {!hasSubmittedFeedback ? (
             <>
               <textarea
                 id="feedback"
