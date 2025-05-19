@@ -47,6 +47,37 @@
     justify-items: center;
 }
 
+.rec-recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+    justify-items: center;
+}
+
+.rec-recipe-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    text-align: center;
+    width: 90%;
+}
+
+.rec-recipe-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.rec-recipe-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ff7043;
+    margin: 5px 0;
+}
+
 .popular-recipe-card {
     background: white;
     border-radius: 15px;

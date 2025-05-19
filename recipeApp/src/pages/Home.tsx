@@ -143,21 +143,21 @@ function Home() {
 
       <div className="categories-preview">
         <h2>AI Recommended Recipes</h2>
-        <div className="home-recipe-grid">
+        <div className="rec-recipe-grid">
           {recommendedRecipes.length > 0 ? (
             recommendedRecipes.map((recipe) => (
               <div
                 key={recipe.id}
-                className="popular-recipe-card"
+                className="rec-recipe-card"
                 onClick={() => handleClick(recipe)}
               >
                 <img
                   src={recipe.image_url}
                   alt={recipe.name}
-                  className="popular-recipe-image"
+                  className="rec-recipe-image"
                 />
-                <p className="home-recipe-name">{recipe.name}</p>
-                <p className="home-reason">{recipe.reason}</p>
+                <p className="rec-recipe-name">{recipe.name}</p>
+                <p className="rec-reason">{recipe.reason}</p>
               </div>
             ))
           ) : (
