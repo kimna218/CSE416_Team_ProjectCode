@@ -22,6 +22,7 @@ const App: React.FC = () => {
     const auth = getAuth();
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
+
         try {
           const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${firebaseUser.uid}`);
           const data = await res.json();
