@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import AppNavbar from './components/Navbar';
 import Home from './pages/Home';
 import Feed from './pages/Feed';
@@ -9,7 +9,7 @@ import RecipeList from './components/RecipeList';
 import RecipeDetails from "./pages/RecipeDetails";
 import Login from "./pages/Login";
 import ProtectedRoute from './components/ProtectedRoute'; 
-import UserSetupPage from './components/UserSetupPage'; // ✅ 이름과 경로 수정
+import UserSetupPage from './components/UserSetupPage';
 
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import { getAuth } from "firebase/auth";
