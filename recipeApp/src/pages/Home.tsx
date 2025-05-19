@@ -33,6 +33,7 @@ function Home() {
   useEffect(() => {
     const fetchRecommendedRecipes = async () => {
       const uid = getAuth().currentUser?.uid;
+      console.log("User ID:", uid);
       if (!uid) return;
 
       try {
