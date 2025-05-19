@@ -5,10 +5,14 @@ import pkg from "pg";
 import dotenv from "dotenv";
 dotenv.config();
 
+import OpenAI from "openai";
+
 const { Pool } = pkg;
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "https://recipes-416.onrender.com",
+}));
 app.use(express.json());
 
 console.log("Starting server...");
@@ -18,6 +22,10 @@ for (const key of Object.keys(process.env)) {
     console.log(`${key} = ${process.env[key]}`);
   }
 }
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -227,7 +235,10 @@ const extractStepsFromRecipe = (recipe) => {
 
 export async function getUserByUID(uid) {
   try {
-    const result = await pool.query("SELECT * FROM users WHERE firebase_uid = $1", [uid]);
+    const result = await pool.query(
+      "SELECT * FROM users WHERE firebase_uid = $1",
+      [uid]
+    );
     return result.rows[0];
   } catch (err) {
     console.error("Error fetching user by UID:", err);
@@ -559,10 +570,9 @@ app.post("/users/:firebase_uid/favorites", async (req, res) => {
       favorites.push(recipeName);
 
       // likes 수 +1
-      await pool.query(
-        "UPDATE recipes SET likes = likes + 1 WHERE name = $1",
-        [recipeName]
-      );
+      await pool.query("UPDATE recipes SET likes = likes + 1 WHERE name = $1", [
+        recipeName,
+      ]);
     }
 
     await pool.query(
@@ -575,7 +585,6 @@ app.post("/users/:firebase_uid/favorites", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // 즐겨찾기 제거
 app.delete("/users/:firebase_uid/favorites", async (req, res) => {
@@ -614,7 +623,6 @@ app.delete("/users/:firebase_uid/favorites", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 /* * * * * * * * * * */
 /*     Feedback      */
@@ -685,72 +693,94 @@ app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
 });
 
 // Recommendation API
-// GET /recommend-recipes?uid=xxxx
 app.get("/recommend-recipes", async (req, res) => {
   const uid = req.query.uid;
-  if (!uid) return res.status(400).json({ error: "Missing UID" });
-
-  const user = await getUserByUID(uid);
-  if (!user) return res.status(404).json({ error: "User not found" });
-
-  const liked = JSON.parse(user.liked_ingredients || "[]");
-  const disliked = JSON.parse(user.disliked_ingredients || "[]");
-
-  // 🔥 레시피 전체 목록 가져오기
-  const allRecipeNames = await pool.query("SELECT name FROM recipes");
-  const nameList = allRecipeNames.rows.map(r => r.name);
-  const nameListString = JSON.stringify(nameList.slice(0, 500)); // 길이 제한을 위해 500개까지만 전달
-
-  const prompt = `
-You are a recipe recommender.
-
-The user likes: ${liked.join(", ")}.
-The user dislikes: ${disliked.join(", ")}.
-
-Only recommend 5 recipe titles that exactly match the following list:
-${nameListString}
-
-Return them as a JSON array:
-[
-  "Recipe 1",
-  "Recipe 2",
-  ...
-]
-`;
+  if (!uid) return res.status(400).json({ error: "Missing uid" });
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+    const userRes = await pool.query(
+      "SELECT liked_ingredients, disliked_ingredients FROM users WHERE firebase_uid = $1",
+      [uid]
+    );
 
-    const data = await openaiRes.json();
-    const text = data.choices[0].message.content;
-
-    let recipes;
-    try {
-      recipes = JSON.parse(text);
-    } catch (err) {
-      console.error("OpenAI 응답 파싱 실패:", text);
-      return res.status(500).json({ error: "Invalid JSON from OpenAI" });
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    // 🔎 필터링 (혹시라도 추천된 이름이 DB에 없다면 제거)
-    const verified = recipes.filter((name) => nameList.includes(name));
-    res.json({ recommendations: verified });
+    const liked = JSON.parse(userRes.rows[0].liked_ingredients || "[]");
+    const disliked = JSON.parse(userRes.rows[0].disliked_ingredients || "[]");
+
+    const recipeRes = await pool.query(`
+      SELECT id, name, category, ingredients FROM recipes
+    `);
+    const recipeData = recipeRes.rows;
+
+    const recipeListString = recipeData
+      .map(
+        (r, i) =>
+          `${i + 1}. ${r.name} (Category: ${r.category}, Ingredients: ${
+            r.ingredients
+          })`
+      )
+      .join("\n");
+
+    const prompt = `
+You are a recipe recommendation assistant. The user likes these ingredients: ${liked.join(
+      ", "
+    )}, and dislikes these: ${disliked.join(
+      ", "
+    )}. You are given a list of 100 recipes. Choose ONLY 5 recipes that:
+- Contain many of the liked ingredients
+- Do NOT contain any disliked ingredients
+
+Only recommend from this list. Return exactly this JSON format:
+
+[
+  { "id": 1, "name": "Recipe Name", "reason": "Short reason" },
+  ...
+]
+
+Here is the recipe list:
+${recipeListString}
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
+
+    const content = response.choices[0].message.content;
+    try {
+      const recommended = JSON.parse(content);
+      const ids = recommended.map((r) => r.id);
+
+      // DB에서 상세정보 불러오기
+      const finalRes = await pool.query(
+        `SELECT id, name, category, image_url FROM recipes WHERE id = ANY($1)`,
+        [ids]
+      );
+
+      // reason도 포함해서 반환
+      const enriched = finalRes.rows.map((rec) => {
+        const reason = recommended.find((r) => r.id === rec.id)?.reason || "";
+        return { ...rec, reason };
+      });
+
+      res.json(enriched);
+    } catch (err) {
+      console.error("OpenAI JSON parse error:\n", content);
+      res.status(500).json({ error: "Invalid OpenAI response format." });
+    }
   } catch (err) {
-    console.error("OpenAI 요청 실패:", err);
-    res.status(500).json({ error: "OpenAI request failed" });
+    console.error("Error in recommend-recipes:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // 디버깅용 구문
 app.get("/admin/reset-feed", async (req, res) => {
