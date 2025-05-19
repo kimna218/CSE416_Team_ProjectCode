@@ -10,9 +10,7 @@ import OpenAI from "openai";
 const { Pool } = pkg;
 
 const app = express();
-app.use(cors({
-  origin: "https://recipes-416.onrender.com",
-}));
+app.use(cors());
 app.use(express.json());
 
 console.log("Starting server...");
