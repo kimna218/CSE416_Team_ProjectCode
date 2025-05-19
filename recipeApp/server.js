@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
 import pkg from "pg";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 const { Pool } = pkg;
@@ -29,6 +29,15 @@ const pool = new Pool({
 
 console.log("Success to connect");
 
+export async function getUserByUID(uid) {
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE uid = $1", [uid]);
+    return result.rows[0];
+  } catch (err) {
+    console.error("Error fetching user by UID:", err);
+    return null;
+  }
+}
 
 // CREATE TABLES
 // Recipe Page
@@ -121,7 +130,6 @@ await pool.query(`
   )
 `);
 
-
 const apiKey = process.env.FOOD_API_KEY;
 
 const importRecipesFromOpenAPI = async () => {
@@ -187,12 +195,10 @@ const importRecipesFromOpenAPI = async () => {
               [recipe_id, step.step_number, step.description]
             );
           }
-
         } catch (e) {
           console.warn("Fail to insert:", name, e.message);
         }
       }
-
     }
 
     console.log("Complete storing details from OpenAPI");
@@ -215,19 +221,18 @@ const extractStepsFromRecipe = (recipe) => {
   const steps = [];
 
   for (let i = 1; i <= 20; i++) {
-    const raw = recipe[`MANUAL${i.toString().padStart(2, '0')}`];
-    if (raw && raw.trim() !== '') {
-      const cleaned = raw.trim().replace(/^\d+\.\s*/, '');  // "1. ~" 제거
+    const raw = recipe[`MANUAL${i.toString().padStart(2, "0")}`];
+    if (raw && raw.trim() !== "") {
+      const cleaned = raw.trim().replace(/^\d+\.\s*/, ""); // "1. ~" 제거
       steps.push({
         step_number: i,
-        description: cleaned
+        description: cleaned,
       });
     }
   }
 
   return steps;
 };
-
 
 // API Routers
 app.get("/recipes", async (req, res) => {
@@ -250,10 +255,9 @@ app.post("/recipes", async (req, res) => {
 });
 
 app.get("/recipes/detail/:name", async (req, res) => {
-  const result = await pool.query(
-    "SELECT * FROM recipes WHERE name = $1",
-    [req.params.name]
-  );
+  const result = await pool.query("SELECT * FROM recipes WHERE name = $1", [
+    req.params.name,
+  ]);
   res.json(result.rows[0]);
 });
 
@@ -269,7 +273,9 @@ app.get("/recipes/detail/:id/nutrition", async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Nutrition info not found for this recipe." });
+      return res
+        .status(404)
+        .json({ error: "Nutrition info not found for this recipe." });
     }
 
     res.json(result.rows[0]);
@@ -299,7 +305,9 @@ app.get("/recipes/detail/:id/steps", async (req, res) => {
 });
 
 app.get("/posts", async (req, res) => {
-  const result = await pool.query("SELECT * FROM posts ORDER BY created_at DESC");
+  const result = await pool.query(
+    "SELECT * FROM posts ORDER BY created_at DESC"
+  );
   res.json(result.rows);
 });
 
@@ -426,7 +434,6 @@ app.post("/posts/:postId/like", async (req, res) => {
   }
 });
 
-
 /* * * * * * * * */
 /*     Users     */
 /* * * * * * * * */
@@ -434,7 +441,10 @@ app.post("/posts/:postId/like", async (req, res) => {
 app.get("/users/:firebase_uid", async (req, res) => {
   const { firebase_uid } = req.params;
   try {
-    const result = await pool.query("SELECT * FROM users WHERE firebase_uid = $1", [firebase_uid]);
+    const result = await pool.query(
+      "SELECT * FROM users WHERE firebase_uid = $1",
+      [firebase_uid]
+    );
     if (result.rows.length > 0) {
       res.json({ exists: true, user: result.rows[0] });
     } else {
@@ -448,11 +458,17 @@ app.get("/users/:firebase_uid", async (req, res) => {
 
 // post user's info
 app.post("/users/register", async (req, res) => {
-  const {firebase_uid,email,nickname,liked_ingredients,disliked_ingredients} = req.body;
+  const {
+    firebase_uid,
+    email,
+    nickname,
+    liked_ingredients,
+    disliked_ingredients,
+  } = req.body;
 
   const liked = JSON.stringify(liked_ingredients);
   const disliked = JSON.stringify(disliked_ingredients);
-  const favorite = JSON.stringify([]); 
+  const favorite = JSON.stringify([]);
 
   try {
     await pool.query(
@@ -490,7 +506,11 @@ app.put("/users/:firebase_uid", async (req, res) => {
        SET liked_ingredients = $1,
            disliked_ingredients = $2
        WHERE firebase_uid = $3`,
-      [JSON.stringify(liked_ingredients), JSON.stringify(disliked_ingredients), firebase_uid]
+      [
+        JSON.stringify(liked_ingredients),
+        JSON.stringify(disliked_ingredients),
+        firebase_uid,
+      ]
     );
 
     res.status(200).json({ message: "Preferences updated" });
@@ -606,7 +626,6 @@ app.get("/recipes/:recipeId/feedbacks", async (req, res) => {
   }
 });
 
-
 // 유저가 남긴 별점 및 피드백 가져오기
 app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
   const { recipeId, userId } = req.params;
@@ -670,8 +689,6 @@ Recommend 5 creative recipe names (title only) that match their preferences. Ret
   res.json({ recommendations: recipes });
 });
 
-
-
 // 디버깅용 구문
 app.get("/admin/reset-feed", async (req, res) => {
   try {
@@ -684,7 +701,6 @@ app.get("/admin/reset-feed", async (req, res) => {
     res.status(500).json({ error: "Failed to reset feed" });
   }
 });
-
 
 // 서버 시작
 const PORT = process.env.PORT || 5001;

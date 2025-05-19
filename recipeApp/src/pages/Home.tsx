@@ -38,20 +38,22 @@ function Home() {
 
   useEffect(() => {
     const fetchRecommendedRecipes = async () => {
-    const uid = getAuth().currentUser?.uid;
-    if (!uid) return;
+      const uid = getAuth().currentUser?.uid;
+      if (!uid) return;
 
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`);
-      const data = await res.json();
-      setRecommendedRecipes(data.recommendations); // 예: ["Garlic Chicken", "Spicy Tomato Pasta", ...]
-    } catch (err) {
-      console.error("Failed to fetch recommended recipes:", err);
-    }
-  };
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`
+        );
+        const data = await res.json();
+        setRecommendedRecipes(data.recommendations); // 예: ["Garlic Chicken", "Spicy Tomato Pasta", ...]
+      } catch (err) {
+        console.error("Failed to fetch recommended recipes:", err);
+      }
+    };
 
-  fetchRecommendedRecipes();
-    
+    fetchRecommendedRecipes();
+
     const fetchRecipesWithNutrition = async () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
       const data: Recipe[] = await res.json();
@@ -60,7 +62,9 @@ function Home() {
         data.map(async (recipe) => {
           try {
             const nutriRes = await fetch(
-              `${import.meta.env.VITE_API_URL}/recipes/detail/${recipe.id}/nutrition`
+              `${import.meta.env.VITE_API_URL}/recipes/detail/${
+                recipe.id
+              }/nutrition`
             );
             const nutrition: Nutrition = await nutriRes.json();
             return { ...recipe, ...nutrition };
@@ -97,11 +101,19 @@ function Home() {
 
   const totalPages = Math.ceil(sortedRecipes.length / recipesPerPage);
   const startIndex = (currentPage - 1) * recipesPerPage;
-  const currentRecipes = sortedRecipes.slice(startIndex, startIndex + recipesPerPage);
+  const currentRecipes = sortedRecipes.slice(
+    startIndex,
+    startIndex + recipesPerPage
+  );
 
   const paginationGroupSize = 5;
-  const paginationStart = Math.floor((currentPage - 1) / paginationGroupSize) * paginationGroupSize + 1;
-  const paginationEnd = Math.min(paginationStart + paginationGroupSize - 1, totalPages);
+  const paginationStart =
+    Math.floor((currentPage - 1) / paginationGroupSize) * paginationGroupSize +
+    1;
+  const paginationEnd = Math.min(
+    paginationStart + paginationGroupSize - 1,
+    totalPages
+  );
 
   const handleClick = (recipe: Recipe) => {
     const path = `/recipes/detail/${encodeURIComponent(recipe.name)}`;
@@ -112,37 +124,46 @@ function Home() {
     <div className="home-page">
       <div className="hero-section">
         <h1>Welcome to RecipeApp 🍳</h1>
-        <p>Discover delicious recipes, search by ingredients, and explore meal categories!</p>
+        <p>
+          Discover delicious recipes, search by ingredients, and explore meal
+          categories!
+        </p>
       </div>
 
       <div className="categories-preview">
-  <h2>Recommendation Recipes</h2>
-  <div className="home-category-grid">
-    {recommendedRecipes.length === 0 ? (
-      <p>Loading personalized recipes...</p>
-    ) : (
-      recommendedRecipes.map((name, index) => (
-        <div
-          key={index}
-          className="home-recipe-card"
-          onClick={() => navigate(`/recipes/detail/${encodeURIComponent(name)}`)}
-        >
-          <div className="home-recipe-placeholder">
-            <p className="home-recipe-name">{name}</p>
-            <p className="nutrition-info">(Click to view details)</p>
-          </div>
+        <h2>Recommendation Recipes</h2>
+        <div className="home-category-grid">
+          {recommendedRecipes.length === 0 ? (
+            <p>Loading personalized recipes...</p>
+          ) : (
+            recommendedRecipes.map((name, index) => (
+              <div
+                key={index}
+                className="home-recipe-card"
+                onClick={() =>
+                  navigate(`/recipes/detail/${encodeURIComponent(name)}`)
+                }
+              >
+                <div className="home-recipe-placeholder">
+                  <p className="home-recipe-name">{name}</p>
+                  <p className="nutrition-info">(Click to view details)</p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      ))
-    )}
-  </div>
-</div>
+      </div>
 
       <div className="popular-recipes">
         <h2>Popular Recipes</h2>
         <div className="home-recipe-grid">
           {popularRecipes.map((recipe, index) => (
             <div key={index} className="popular-recipe-card">
-              <img src={recipe.image} alt={recipe.name} className="popular-recipe-image" />
+              <img
+                src={recipe.image}
+                alt={recipe.name}
+                className="popular-recipe-image"
+              />
               <p className="home-recipe-name">{recipe.name}</p>
             </div>
           ))}
@@ -169,11 +190,27 @@ function Home() {
 
       <div className="home-category-grid">
         {currentRecipes.map((recipe) => (
-          <div key={recipe.id} className="home-recipe-card" onClick={() => handleClick(recipe)}>
-            <img src={recipe.image_url} alt={recipe.name} className="home-recipe-image" />
+          <div
+            key={recipe.id}
+            className="home-recipe-card"
+            onClick={() => handleClick(recipe)}
+          >
+            <img
+              src={recipe.image_url}
+              alt={recipe.name}
+              className="home-recipe-image"
+            />
             <p className="home-recipe-name">{recipe.name}</p>
             <p className="nutrition-info">
-              {`Protein: ${recipe.protein.toFixed(1)}g | Carbs: ${recipe.carbohydrates.toFixed(1)}g | Fat: ${recipe.fat.toFixed(1)}g | Sodium: ${recipe.sodium.toFixed(1)}mg | Calories: ${recipe.calories}`}
+              {`Protein: ${recipe.protein.toFixed(
+                1
+              )}g | Carbs: ${recipe.carbohydrates.toFixed(
+                1
+              )}g | Fat: ${recipe.fat.toFixed(
+                1
+              )}g | Sodium: ${recipe.sodium.toFixed(1)}mg | Calories: ${
+                recipe.calories
+              }`}
             </p>
           </div>
         ))}
@@ -181,9 +218,14 @@ function Home() {
 
       <div className="pagination">
         {paginationStart > 1 && (
-          <button onClick={() => setCurrentPage(paginationStart - 1)}>{'<'}</button>
+          <button onClick={() => setCurrentPage(paginationStart - 1)}>
+            {"<"}
+          </button>
         )}
-        {Array.from({ length: paginationEnd - paginationStart + 1 }, (_, i) => paginationStart + i).map((pageNum) => (
+        {Array.from(
+          { length: paginationEnd - paginationStart + 1 },
+          (_, i) => paginationStart + i
+        ).map((pageNum) => (
           <button
             key={pageNum}
             onClick={() => setCurrentPage(pageNum)}
@@ -193,7 +235,9 @@ function Home() {
           </button>
         ))}
         {paginationEnd < totalPages && (
-          <button onClick={() => setCurrentPage(paginationEnd + 1)}>{'>'}</button>
+          <button onClick={() => setCurrentPage(paginationEnd + 1)}>
+            {">"}
+          </button>
         )}
       </div>
     </div>
