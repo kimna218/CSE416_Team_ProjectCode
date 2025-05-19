@@ -141,7 +141,7 @@ function Home() {
       </div>
 
       <div className="categories-preview">
-        <h2>AI Recommended Recipes (From DB)</h2>
+        <h2>AI Recommended Recipes</h2>
         <div className="home-recipe-grid">
           {recommendedRecipes.length > 0 ? (
             recommendedRecipes.map((recipe) => (
