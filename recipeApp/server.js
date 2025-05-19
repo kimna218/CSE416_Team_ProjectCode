@@ -29,21 +29,9 @@ const pool = new Pool({
 
 console.log("Success to connect");
 
-export async function getUserByUID(uid) {
-  try {
-    const result = await pool.query("SELECT * FROM users WHERE uid = $1", [uid]);
-    return result.rows[0];
-  } catch (err) {
-    console.error("Error fetching user by UID:", err);
-    return null;
-  }
-}
-
 // CREATE TABLES
 // Recipe Page
 await pool.query(`
-  DROP TABLE IF EXISTS recipes CASCADE;
-
   CREATE TABLE IF NOT EXISTS recipes (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
@@ -236,6 +224,16 @@ const extractStepsFromRecipe = (recipe) => {
 
   return steps;
 };
+
+export async function getUserByUID(uid) {
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE firebase_uid = $1", [uid]);
+    return result.rows[0];
+  } catch (err) {
+    console.error("Error fetching user by UID:", err);
+    return null;
+  }
+}
 
 // API Routers
 app.get("/recipes", async (req, res) => {
