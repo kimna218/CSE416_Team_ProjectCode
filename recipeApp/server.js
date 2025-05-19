@@ -404,6 +404,64 @@ app.put("/users/:firebase_uid", async (req, res) => {
   }
 });
 
+// 즐겨찾기 추가
+app.post("/users/:firebase_uid/favorites", async (req, res) => {
+  const { firebase_uid } = req.params;
+  const { recipeName } = req.body;
+
+  try {
+    const result = await pool.query(
+      "SELECT favorite_recipes FROM users WHERE firebase_uid = $1",
+      [firebase_uid]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const favorites = JSON.parse(result.rows[0].favorite_recipes || "[]");
+    if (!favorites.includes(recipeName)) {
+      favorites.push(recipeName);
+    }
+
+    await pool.query(
+      "UPDATE users SET favorite_recipes = $1 WHERE firebase_uid = $2",
+      [JSON.stringify(favorites), firebase_uid]
+    );
+    res.status(200).json({ message: "Recipe added to favorites" });
+  } catch (err) {
+    console.error("Error adding favorite:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// 즐겨찾기 제거
+app.delete("/users/:firebase_uid/favorites", async (req, res) => {
+  const { firebase_uid } = req.params;
+  const { recipeName } = req.body;
+
+  try {
+    const result = await pool.query(
+      "SELECT favorite_recipes FROM users WHERE firebase_uid = $1",
+      [firebase_uid]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    let favorites = JSON.parse(result.rows[0].favorite_recipes || "[]");
+    favorites = favorites.filter((name) => name !== recipeName);
+
+    await pool.query(
+      "UPDATE users SET favorite_recipes = $1 WHERE firebase_uid = $2",
+      [JSON.stringify(favorites), firebase_uid]
+    );
+    res.status(200).json({ message: "Recipe removed from favorites" });
+  } catch (err) {
+    console.error("Error removing favorite:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // 서버 시작
 const PORT = process.env.PORT || 5001;

@@ -28,15 +28,14 @@
 .tab-buttons button {
     padding: 0.5rem 1.5rem;
     font-weight: bold;
-    background: #edf4ff;
+    background: #fff7f2;
     cursor: pointer;
     border-radius: 10px;
-    transition: background 0.3s;
 }
 
 .tab-buttons button.active {
-    background: #0d6efd;
-    color: white;
+    background: #f8c9ae;
+    color: black;
 }
 
 .tab-content {
@@ -44,11 +43,6 @@
     padding: 1rem;
     border-radius: 10px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
-}
-
-.tab-content ul {
-    list-style: none;
-    padding-left: 0;
 }
 
 .tab-content li {
@@ -137,16 +131,16 @@
 .feedback-box button {
     margin-top: 8px;
     padding: 8px 16px;
-    background-color: #0d6efd;
+    background-color: #ffe2d1;
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    color: white;
+    color: rgb(0, 0, 0);
     font-weight: bold;
 }
 
 .feedback-box button:hover {
-    background-color: #0b5ed7;
+    background-color: #f8c9ae;
 }
 
 .recipe-title-box {
@@ -175,8 +169,7 @@
 }
 
 .share-button {
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
+    border: 1px solid #f7b28b;
     padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;

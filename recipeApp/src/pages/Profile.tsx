@@ -3,6 +3,14 @@ import "../css/Profile.css";
 import { getAuth, signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
+interface Recipe {
+  id: number;
+  name: string;
+  category: string;
+  image_url: string;
+  ingredients: string;
+}
+
 function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -14,6 +22,7 @@ function Profile() {
   const [likedList, setLikedList] = useState<string[]>([]);
   const [initialDisliked, setInitialDisliked] = useState<string[]>([]);
   const [initialLiked, setInitialLiked] = useState<string[]>([]);
+  const [favoriteRecipesData, setFavoriteRecipesData] = useState<Recipe[]>([]);
 
   useEffect(() => {
     const auth = getAuth();
@@ -25,12 +34,12 @@ function Profile() {
           const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${currentUser.uid}`);
           const data = await res.json();
           const userData = data.user;
-
+          const recipeNames = JSON.parse(data.user.favorite_recipes || "[]");
           setUser({
             name: userData.nickname || currentUser.displayName,
             email: userData.email || "",
             profileImage: currentUser.photoURL || "/images/default-profile.jpg",
-            favoriteRecipes: JSON.parse(userData.favorite_recipes || "[]"),
+            favoriteRecipes: recipeNames,
           });
 
           const liked = JSON.parse(userData.liked_ingredients || "[]");
@@ -40,6 +49,18 @@ function Profile() {
           setDislikedList(disliked);
           setInitialLiked(liked);
           setInitialDisliked(disliked);
+          setFavoriteRecipesData(recipeNames);
+
+          // ✅ 각 레시피 정보 개별 fetch
+          const fetchedRecipes = await Promise.all(
+            recipeNames.map(async (name: string) => {
+              const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${encodeURIComponent(name)}`);
+              return await res.json(); // { id, name, image_url, ... }
+            })
+          );
+
+          setFavoriteRecipesData(fetchedRecipes);
+
         } catch (err) {
           console.error("Failed to fetch user info:", err);
         }
@@ -107,13 +128,17 @@ function Profile() {
     }
   };
 
-
   const handleCancel = () => {
     setLikedList(initialLiked);
     setDislikedList(initialDisliked);
     setLikedInput("");
     setDislikedInput("");
     setIsEditing(false);
+  };
+
+  const handleClick = (recipe: Recipe) => {
+    const path = `/recipes/detail/${encodeURIComponent(recipe.name)}`;
+    navigate(path);
   };
 
   if (!user) return <p>Loading profile...</p>;
@@ -137,9 +162,9 @@ function Profile() {
           {user.favoriteRecipes.length === 0 ? (
             <p>No favorite recipes yet.</p>
           ) : (
-            user.favoriteRecipes.map((recipe: any, index: number) => (
-              <div key={index} className="recipe-card">
-                <img src={recipe.image} alt={recipe.name} className="recipe-image" />
+            favoriteRecipesData.map((recipe) => (
+              <div key={recipe.id} className="recipe-card" onClick={() => handleClick(recipe)}>
+                <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
                 <p className="recipe-name">{recipe.name}</p>
               </div>
             ))
