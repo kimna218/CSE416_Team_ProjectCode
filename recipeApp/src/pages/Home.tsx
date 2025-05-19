@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/Home.css";
+import { getAuth } from "firebase/auth";
 
 const popularRecipes = [
   { name: "Pancakes", image: "/images/pancakes.jpg" },
@@ -30,11 +31,27 @@ function Home() {
   const navigate = useNavigate();
   const [recipes, setRecipes] = useState<FullRecipe[]>([]);
   const [sortKey, setSortKey] = useState<string>("protein");
+  const [recommendedRecipes, setRecommendedRecipes] = useState<string[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const recipesPerPage = 12;
 
   useEffect(() => {
+    const fetchRecommendedRecipes = async () => {
+    const uid = getAuth().currentUser?.uid;
+    if (!uid) return;
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`);
+      const data = await res.json();
+      setRecommendedRecipes(data.recommendations); // 예: ["Garlic Chicken", "Spicy Tomato Pasta", ...]
+    } catch (err) {
+      console.error("Failed to fetch recommended recipes:", err);
+    }
+  };
+
+  fetchRecommendedRecipes();
+    
     const fetchRecipesWithNutrition = async () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
       const data: Recipe[] = await res.json();
@@ -99,12 +116,26 @@ function Home() {
       </div>
 
       <div className="categories-preview">
-        <h2>Recommendation Recipes</h2>
-        <div className="home-category-grid">
-          {/* 추천 레시피 영역 (추후 구현) */}
-          <p>Coming Soon...</p>
+  <h2>Recommendation Recipes</h2>
+  <div className="home-category-grid">
+    {recommendedRecipes.length === 0 ? (
+      <p>Loading personalized recipes...</p>
+    ) : (
+      recommendedRecipes.map((name, index) => (
+        <div
+          key={index}
+          className="home-recipe-card"
+          onClick={() => navigate(`/recipes/detail/${encodeURIComponent(name)}`)}
+        >
+          <div className="home-recipe-placeholder">
+            <p className="home-recipe-name">{name}</p>
+            <p className="nutrition-info">(Click to view details)</p>
+          </div>
         </div>
-      </div>
+      ))
+    )}
+  </div>
+</div>
 
       <div className="popular-recipes">
         <h2>Popular Recipes</h2>

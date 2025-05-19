@@ -628,6 +628,49 @@ app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
   }
 });
 
+// Recommendation API
+// GET /recommend-recipes?uid=xxxx
+app.get("/recommend-recipes", async (req, res) => {
+  const uid = req.query.uid;
+  if (!uid) return res.status(400).json({ error: "Missing UID" });
+
+  const user = await getUserByUID(uid); // DB에서 liked/disliked_ingredients 가져오는 함수
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  const liked = user.liked_ingredients || [];
+  const disliked = user.disliked_ingredients || [];
+
+  const prompt = `
+You are a recipe recommender.
+This user likes: ${liked.join(", ")}.
+This user dislikes: ${disliked.join(", ")}.
+Recommend 5 creative recipe names (title only) that match their preferences. Return them in JSON format as:
+[
+  "Recipe Name 1",
+  "Recipe Name 2",
+  ...
+]
+`;
+
+  const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  const data = await openaiRes.json();
+  const text = data.choices[0].message.content;
+  const recipes = JSON.parse(text);
+  res.json({ recommendations: recipes });
+});
+
+
 
 // 디버깅용 구문
 app.get("/admin/reset-feed", async (req, res) => {
