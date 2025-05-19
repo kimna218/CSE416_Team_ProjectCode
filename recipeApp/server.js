@@ -100,6 +100,23 @@ await pool.query(`
   )
 `);
 
+await pool.query(`
+  CREATE TABLE recipes_rate (
+      user_id VARCHAR(255),
+      nickname VARCHAR(50),
+      recipe_id INT,
+      rating INT CHECK (
+          rating >= 1
+          AND rating <= 5
+      ),
+      feedback TEXT,
+      rated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, recipe_id),
+      FOREIGN KEY (user_id) REFERENCES users (firebase_uid),
+      FOREIGN KEY (recipe_id) REFERENCES recipes (id)
+  )
+`);
+
 
 const apiKey = process.env.FOOD_API_KEY;
 
@@ -337,7 +354,7 @@ app.post("/posts/:postId/comments", async (req, res) => {
 /* * * * * * * * */
 /*     Users     */
 /* * * * * * * * */
-
+//이미 signUp 했는지, get user's info
 app.get("/users/:firebase_uid", async (req, res) => {
   const { firebase_uid } = req.params;
   try {
@@ -353,6 +370,7 @@ app.get("/users/:firebase_uid", async (req, res) => {
   }
 });
 
+// post user's info
 app.post("/users/register", async (req, res) => {
   const {firebase_uid,email,nickname,liked_ingredients,disliked_ingredients} = req.body;
 
@@ -374,6 +392,7 @@ app.post("/users/register", async (req, res) => {
   }
 });
 
+//see all users
 app.get("/users", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM users");
@@ -384,6 +403,7 @@ app.get("/users", async (req, res) => {
   }
 });
 
+//update user's preferences
 app.put("/users/:firebase_uid", async (req, res) => {
   const { firebase_uid } = req.params;
   const { liked_ingredients, disliked_ingredients } = req.body;
@@ -460,6 +480,75 @@ app.delete("/users/:firebase_uid/favorites", async (req, res) => {
   } catch (err) {
     console.error("Error removing favorite:", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/* * * * * * * * * * */
+/*     Feedback      */
+/* * * * * * * * * * */
+// 별점 및 피드백 저장 (INSERT or UPDATE)
+app.post("/recipes/:recipeId/rate", async (req, res) => {
+  const { recipeId } = req.params;
+  const { userId, nickname, rating, feedback } = req.body;
+
+  if (!userId || !nickname || !rating) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const query = `
+      INSERT INTO recipes_rate (user_id, nickname, recipe_id, rating, feedback, rated_at)
+      VALUES ($1, $2, $3, $4, $5, NOW())
+      ON CONFLICT (user_id, recipe_id)
+      DO UPDATE SET
+        rating = EXCLUDED.rating,
+        feedback = EXCLUDED.feedback,
+        nickname = EXCLUDED.nickname,
+        rated_at = NOW();
+    `;
+    await pool.query(query, [userId, nickname, recipeId, rating, feedback]);
+    res.status(200).json({ message: "Rating saved successfully" });
+  } catch (err) {
+    console.error("Failed to save rating:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// 해당 레시피의 모든 피드백 가져오기
+app.get("/recipes/:recipeId/feedbacks", async (req, res) => {
+  const { recipeId } = req.params;
+
+  try {
+    const result = await pool.query(
+      "SELECT nickname, rating, feedback, rated_at FROM recipes_rate WHERE recipe_id = $1 ORDER BY rated_at DESC",
+      [recipeId]
+    );
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error("Failed to fetch feedbacks:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+// 유저가 남긴 별점 및 피드백 가져오기
+app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
+  const { recipeId, userId } = req.params;
+
+  try {
+    const result = await pool.query(
+      "SELECT rating, feedback, rated_at FROM recipes_rate WHERE user_id = $1 AND recipe_id = $2",
+      [userId, recipeId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No rating found" });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error("Failed to get rating:", err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

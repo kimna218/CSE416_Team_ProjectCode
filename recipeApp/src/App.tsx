@@ -15,7 +15,6 @@ import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from
 import { getAuth } from "firebase/auth";
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,7 +22,6 @@ const App: React.FC = () => {
     const auth = getAuth();
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
-        setUser(firebaseUser);
 
         try {
           const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${firebaseUser.uid}`);
