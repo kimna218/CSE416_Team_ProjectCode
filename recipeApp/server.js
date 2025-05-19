@@ -630,12 +630,12 @@ app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
 
 
 // 디버깅용 구문
-app.delete("/admin/reset-feed", async (req, res) => {
+app.get("/admin/reset-feed", async (req, res) => {
   try {
     await pool.query("DELETE FROM post_likes");
     await pool.query("DELETE FROM post_comments");
     await pool.query("DELETE FROM posts");
-    res.status(200).json({ message: "Feed reset successful" });
+    res.status(200).json({ message: "Feed reset successful (GET method)" });
   } catch (err) {
     console.error("Feed reset error:", err);
     res.status(500).json({ error: "Failed to reset feed" });
