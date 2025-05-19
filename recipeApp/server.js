@@ -320,7 +320,7 @@ app.get("/recipes/detail/:id/steps", async (req, res) => {
 app.get("/recipes/popular", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, name, image_url, category
+      SELECT id, name, image_url, category, likes
       FROM recipes
       ORDER BY likes DESC
       LIMIT 4

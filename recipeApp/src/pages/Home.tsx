@@ -8,6 +8,7 @@ interface Recipe {
   name: string;
   image_url: string;
   category: string;
+  likes: number;
 }
 
 interface Nutrition {
@@ -147,7 +148,7 @@ function Home() {
             recommendedRecipes.map((recipe) => (
               <div
                 key={recipe.id}
-                className="home-recipe-card"
+                className="popular-recipe-card"
                 onClick={() => handleClick(recipe)}
               >
                 <img
@@ -180,6 +181,7 @@ function Home() {
                 className="popular-recipe-image"
               />
               <p className="home-recipe-name">{recipe.name}</p>
+              <p className="home-recipe-likes">❤️ {recipe.likes} Likes</p>
             </div>
           ))}
         </div>

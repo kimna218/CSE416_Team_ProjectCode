@@ -101,6 +101,12 @@
     margin: 5px 0;
 }
 
+.home-recipe-likes {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 4px;
+}
+
 .nutrition-info {
     font-size: 0.9rem;
     padding: 0px 10px;
