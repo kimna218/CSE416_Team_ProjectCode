@@ -85,6 +85,8 @@
   transition: all 0.3s ease;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border: none;
+  width: 35px;
+  height: 35px;
 }
 
 .navbar-icons .icon-btn:hover {
