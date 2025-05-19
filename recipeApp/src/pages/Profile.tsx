@@ -163,7 +163,7 @@ function Profile() {
             <p>No favorite recipes yet.</p>
           ) : (
             favoriteRecipesData.map((recipe) => (
-              <div key={recipe.id} className="recipe-card" onClick={() => handleClick(recipe)}>
+              <div key={recipe.id} className="profile-recipe-card" onClick={() => handleClick(recipe)}>
                 <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
                 <p className="recipe-name">{recipe.name}</p>
               </div>

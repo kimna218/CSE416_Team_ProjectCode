@@ -32,7 +32,6 @@ const SearchResult: React.FC = () => {
 
   const navigate = useNavigate();
 
-  // 🧠 음성 인식 초기화
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -144,7 +143,7 @@ const SearchResult: React.FC = () => {
         {hasSearched ? (
           filteredRecipes.length > 0 ? (
             filteredRecipes.map((recipe, index) => (
-              <div key={index} className="recipe-card" onClick={() => handleClick(recipe)}>
+              <div key={index} className="result-recipe-card" onClick={() => handleClick(recipe)}>
                 <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
                 <p className="recipe-name">{recipe.name}</p>
               </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import AppNavbar from './components/Navbar';
 import Home from './pages/Home';
 import Feed from './pages/Feed';
@@ -9,13 +9,12 @@ import RecipeList from './components/RecipeList';
 import RecipeDetails from "./pages/RecipeDetails";
 import Login from "./pages/Login";
 import ProtectedRoute from './components/ProtectedRoute'; 
-import UserSetupPage from './components/UserSetupPage'; // ✅ 이름과 경로 수정
+import UserSetupPage from './components/UserSetupPage';
 
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import { getAuth } from "firebase/auth";
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,8 +22,6 @@ const App: React.FC = () => {
     const auth = getAuth();
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
-        setUser(firebaseUser);
-
         try {
           const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${firebaseUser.uid}`);
           const data = await res.json();

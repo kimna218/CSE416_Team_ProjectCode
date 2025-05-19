@@ -44,7 +44,7 @@
   justify-items: center;
 }
 
-.recipe-card {
+.profile-recipe-card {
   background-color: #ffffff;
   border: 2px solid #e6e6e6;
   border-radius: 15px;
@@ -55,7 +55,7 @@
   text-align: center;
 }
 
-.recipe-card:hover {
+.profile-recipe-card:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
