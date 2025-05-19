@@ -734,6 +734,14 @@ Return them as a JSON array:
     const data = await openaiRes.json();
     const text = data.choices[0].message.content;
 
+    if (!openaiRes.ok) {
+  const errorText = await openaiRes.text();
+  console.error("❌ OpenAI 응답 실패 상태코드:", openaiRes.status);
+  console.error("❌ OpenAI 응답 본문:", errorText);
+  return res.status(500).json({ error: "OpenAI request failed" });
+}
+
+
     let recipes;
     try {
       recipes = JSON.parse(text);
