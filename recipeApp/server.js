@@ -109,7 +109,7 @@ await pool.query(`
 `);
 
 await pool.query(`
-  CREATE TABLE recipes_rate (
+  CREATE TABLE IF NOT EXISTS recipes_rate (
       user_id VARCHAR(255),
       nickname VARCHAR(50),
       recipe_id INT,
