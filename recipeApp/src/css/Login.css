@@ -1,149 +1,114 @@
-.login-page {
-    font-family: 'Inter', sans-serif;
-    width: 100vw;
-    padding: 80px 80px;
-    padding-right: 100px;
-}
-
-.login-box {
-    text-align: center;
-    padding: 40px;
-}
-
-.app-title {
-    font-size: 32px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: #ff7043;
-}
-
-.login-message {
-    font-size: 16px;
-    margin-bottom: 25px;
-    color: #555;
-}
-
-.google-login-button {
-    background-color: #ffffff;
-    border: 2px solid #ff7043;
-    border-radius: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    color: #ff7043;
-    transition: all 0.3s ease;
-}
-
-.google-login-button:hover {
-    background-color: #ff7043;
-    color: white;
-}
-
-
-/* * * * * * * * */
-/* UserSetupPage */
-/* * * * * * * * */
-
+/* Container */
 .user-setup-page {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 90vh;
-    font-family: 'Inter', sans-serif;
-    width: 100vw;
-    padding: 80px 80px;
-    padding-right: 100px;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 20px;
+  padding-right: 40px;
+  width: 100vw;
 }
 
 .setup-box {
-    padding: 40px;
-    width: 400px;
-    text-align: center;
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
+/* Heading */
 .setup-box h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  text-align: center;
 }
 
-.setup-box h3 {
-    font-size: 15px;
-    margin-bottom: 20px;
-    margin-top: 20px;
-}
-
+/* Label */
 .setup-box label {
-    display: block;
-    font-weight: bold;
-    margin-top: 20px;
-    margin-bottom: 8px;
-    text-align: left;
+  display: block;
+  font-weight: 500;
+  margin: 20px 0 10px;
+  font-size: 15px;
 }
 
-.setup-box input {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    margin-right: 5%;
-}
-
+/* Input + Button Row */
 .input-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-top: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .input-row input {
-    flex: 1;
+  flex: 1;
+  height: 44px;
+  padding: 0 14px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background-color: #fff;
 }
 
-.setup-box button {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 8px;
-    background-color: #ffe2d1;
-    color: black;
-    cursor: pointer;
-    transition: 0.2s ease;
+/* Add Button */
+.add-button {
+  height: 44px;
+  padding: 0 18px;
+  font-size: 15px;
+  background-color: #ffccb3;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.setup-box button:hover {
-    background-color: #ffe2d1;
+.add-button:hover {
+  background-color: #ffa980;
 }
 
-.setup-box span {
-    display: inline-block;
-    background-color: #f0f0f0;
-    padding: 5px 10px;
-    border-radius: 12px;
-    margin: 4px 4px 0 0;
-    font-size: 14px;
-}
-
+/* Tag */
 .tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
 }
+
 .tag {
-    background-color: #eee;
-    border-radius: 12px;
-    padding: 6px 12px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+  background-color: #e2e2e2;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .tag:hover {
-    background-color: #e98c8c;
+  background-color: #ffc4a3;
 }
 
-.tag:hover .tag-close {
-    display: inline;
+/* Save Button */
+.save-profile-button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  background-color: #ff7043;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.save-profile-button:hover {
+  background-color: #e5582c;
+}
+
+/* Subtext */
+.setup-box p {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  margin-top: 16px;
 }

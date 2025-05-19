@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import '../css/Feed.css';
+import React, { useState, useEffect } from "react";
+import "../css/Feed.css";
+import { getAuth } from "firebase/auth";
 
 type Comment = {
   id: number;
@@ -20,38 +21,47 @@ const Feed: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [showComments, setShowComments] = useState<Record<number, boolean>>({});
   const [comments, setComments] = useState<Record<number, Comment[]>>({});
-  const [newCommentText, setNewCommentText] = useState<Record<number, string>>({});
-  const [newPostCaption, setNewPostCaption] = useState('');
+  const [newCommentText, setNewCommentText] = useState<Record<number, string>>(
+    {}
+  );
+  const [newPostCaption, setNewPostCaption] = useState("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [likes, setLikes] = useState<Record<number, number>>({});
-  const [uploadMessage, setUploadMessage] = useState<string>('');
+  const [uploadMessage, setUploadMessage] = useState<string>("");
+  const [userLikes, setUserLikes] = useState<Record<number, boolean>>({});
 
-  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dlm1w7msc/image/upload';
-  const CLOUDINARY_PRESET = 'ml_default';
+  const CLOUDINARY_URL =
+    "https://api.cloudinary.com/v1_1/dlm1w7msc/image/upload";
+  const CLOUDINARY_PRESET = "ml_default";
 
-  const uploadImageToCloudinary = async (file: File): Promise<string | null> => {
+  const auth = getAuth();
+  // const uid = auth.currentUser?.uid;
+
+  const uploadImageToCloudinary = async (
+    file: File
+  ): Promise<string | null> => {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_PRESET);
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_PRESET);
 
     try {
       setIsUploading(true);
       const res = await fetch(CLOUDINARY_URL, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
       const data = await res.json();
-      setUploadMessage('✅ Upload successful!');
+      setUploadMessage("✅ Upload successful!");
       return data.secure_url;
     } catch (err) {
-      console.error('Cloudinary upload failed:', err);
-      setUploadMessage('❌ Upload failed. Please try again.');
+      console.error("Cloudinary upload failed:", err);
+      setUploadMessage("❌ Upload failed. Please try again.");
       return null;
     } finally {
       setIsUploading(false);
-      setTimeout(() => setUploadMessage(''), 3000);
+      setTimeout(() => setUploadMessage(""), 3000);
     }
   };
 
@@ -62,7 +72,9 @@ const Feed: React.FC = () => {
       setPosts(data);
 
       // 좋아요 수 초기화
-      const likesRes = await fetch(`${import.meta.env.VITE_API_URL}/posts/likes`);
+      const likesRes = await fetch(
+        `${import.meta.env.VITE_API_URL}/posts/likes`
+      );
       const likeData = await likesRes.json();
       const likeMap: Record<number, number> = {};
       likeData.forEach((item: { post_id: number; likes: number }) => {
@@ -70,7 +82,7 @@ const Feed: React.FC = () => {
       });
       setLikes(likeMap);
     } catch (err) {
-      console.error('Failed to fetch posts or likes:', err);
+      console.error("Failed to fetch posts or likes:", err);
     }
   };
 
@@ -79,39 +91,91 @@ const Feed: React.FC = () => {
 
     if (!comments[postId]) {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/comments`);
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/posts/${postId}/comments`
+        );
         const data = await res.json();
         setComments((prev) => ({ ...prev, [postId]: data }));
       } catch (err) {
-        console.error('Failed to load comments:', err);
+        console.error("Failed to load comments:", err);
       }
     }
   };
 
-  const handleLike = async (postId: number) => {
-    const likedKey = `liked_${postId}`;
-    if (localStorage.getItem(likedKey)) return;
+  const fetchUserLikes = async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
 
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/like`, { method: 'POST' });
-      setLikes((prev) => ({ ...prev, [postId]: (prev[postId] || 0) + 1 }));
-      localStorage.setItem(likedKey, 'true');
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/users/${uid}/likes`
+      );
+      const data: { post_id: number }[] = await res.json();
+
+      const likeStatus: Record<number, boolean> = {};
+      data.forEach(({ post_id }) => {
+        likeStatus[post_id] = true;
+      });
+      setUserLikes(likeStatus);
     } catch (err) {
-      console.error('Failed to like post:', err);
+      console.error("Failed to fetch user likes:", err);
     }
+  };
+
+  const handleLike = async (postId: number) => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/posts/${postId}/like`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ firebase_uid: uid }),
+        }
+      );
+
+      const result = await res.json();
+
+      const liked = result.liked;
+      setLikes((prev) => ({
+        ...prev,
+        [postId]: liked
+          ? (prev[postId] || 0) + 1
+          : Math.max((prev[postId] || 1) - 1, 0),
+      }));
+      setUserLikes((prev) => ({
+        ...prev,
+        [postId]: liked,
+      }));
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+    }
+  };
+
+  const fetchNickname = async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${uid}`);
+    const data = await res.json();
+    return data.user.nickname;
   };
 
   const handleNewPost = async () => {
     if (!newPostCaption || !uploadFile) return;
+
     const imageUrl = await uploadImageToCloudinary(uploadFile);
     if (!imageUrl) return;
 
+    const nickname = await fetchNickname();
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: 'cook_lover',
+          username: nickname, 
           caption: newPostCaption,
           image_url: imageUrl,
         }),
@@ -119,11 +183,11 @@ const Feed: React.FC = () => {
 
       const newPost = await res.json();
       setPosts((prev) => [newPost, ...prev]);
-      setNewPostCaption('');
+      setNewPostCaption("");
       setUploadFile(null);
       setPreviewUrl(null);
     } catch (err) {
-      console.error('Failed to upload post:', err);
+      console.error("Failed to upload post:", err);
     }
   };
 
@@ -131,29 +195,35 @@ const Feed: React.FC = () => {
     const text = newCommentText[postId];
     if (!text) return;
 
+    const nickname = await fetchNickname();
+
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'user123',
-          text,
-        }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/posts/${postId}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: nickname,
+            text,
+          }),
+        }
+      );
 
       const newComment = await res.json();
       setComments((prev) => ({
         ...prev,
         [postId]: [...(prev[postId] || []), newComment],
       }));
-      setNewCommentText((prev) => ({ ...prev, [postId]: '' }));
+      setNewCommentText((prev) => ({ ...prev, [postId]: "" }));
     } catch (err) {
-      console.error('Failed to submit comment:', err);
+      console.error("Failed to submit comment:", err);
     }
   };
 
   useEffect(() => {
     fetchPosts();
+    fetchUserLikes();
   }, []);
 
   return (
@@ -191,11 +261,19 @@ const Feed: React.FC = () => {
           />
         </div>
 
-        {previewUrl && <img src={previewUrl} alt="Preview" className="post-image" />}
+        <div className="preview-container">
+          {previewUrl && (
+          <img src={previewUrl} alt="Preview" className="preview-file" />
+        )}
         {uploadMessage && <p>{uploadMessage}</p>}
-        <button className="upload-btn" onClick={handleNewPost} disabled={isUploading}>
-          {isUploading ? 'Uploading...' : 'Upload'}
+        <button
+          className="upload-btn"
+          onClick={handleNewPost}
+          disabled={isUploading}
+        >
+          {isUploading ? "Uploading..." : "Upload"}
         </button>
+        </div>
       </section>
 
       <section className="post-grid">
@@ -208,9 +286,13 @@ const Feed: React.FC = () => {
             </div>
             <div className="post-actions">
               <button className="like-btn" onClick={() => handleLike(post.id)}>
-                ❤️ Like {likes[post.id] || 0}
+                {userLikes[post.id] ? "💔 Unlike" : "❤️ Like"}{" "}
+                {likes[post.id] || 0}
               </button>
-              <button className="comment-toggle" onClick={() => toggleComments(post.id)}>
+              <button
+                className="comment-toggle"
+                onClick={() => toggleComments(post.id)}
+              >
                 💬 Comment
               </button>
             </div>
@@ -224,12 +306,17 @@ const Feed: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Write a comment..."
-                  value={newCommentText[post.id] || ''}
+                  value={newCommentText[post.id] || ""}
                   onChange={(e) =>
-                    setNewCommentText((prev) => ({ ...prev, [post.id]: e.target.value }))
+                    setNewCommentText((prev) => ({
+                      ...prev,
+                      [post.id]: e.target.value,
+                    }))
                   }
                 />
-                <button onClick={() => handleCommentSubmit(post.id)}>Submit</button>
+                <button onClick={() => handleCommentSubmit(post.id)}>
+                  Submit
+                </button>
               </div>
             )}
           </div>

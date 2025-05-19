@@ -10,31 +10,34 @@ const AppNavbar: React.FC = () => {
 
   return (
     <Navbar bg="light" expand="lg" className="custom-navbar shadow-sm py-3">
-      <Container>
-        <Navbar.Brand href="#" className="navbar-logo">
-          <img
-            src="/images/logo.png"
-            alt="Logo"
-            className="d-inline-block align-top"
-          />
-        </Navbar.Brand>
+  <Container className="d-grid navbar-grid">
+    <div className="navbar-left">
+      <Navbar.Brand onClick={() => navigate('/')} className="navbar-logo">
+        <img src="/images/logo.png" alt="Logo" />
+      </Navbar.Brand>
+    </div>
 
-        <Nav className="mx-auto navbar-buttons">
-          <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/home')}>Home</Button>
-          <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/category')}>Category</Button>
-          <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/feed')}>Feed</Button>
-        </Nav>
+    <div className="navbar-center">
+      <Nav className="navbar-buttons">
+        <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/home')}>Home</Button>
+        <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/category')}>Category</Button>
+        <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/feed')}>Feed</Button>
+      </Nav>
+    </div>
 
-        <Form className="d-flex align-items-center navbar-icons">
-          <Button variant="outline-secondary" className="icon-btn me-2" onClick={() => navigate('/search-result')}>
-            <FaSearch />
-          </Button>
-          <Button variant="outline-secondary" className="icon-btn" onClick={() => navigate('/profile')}>
-            <FaUser />
-          </Button>
-        </Form>
-      </Container>
-    </Navbar>
+    <div className="navbar-right">
+      <Form className="d-flex align-items-center navbar-icons">
+        <Button variant="outline-secondary" className="icon-btn me-2" onClick={() => navigate('/search-result')}>
+          <FaSearch />
+        </Button>
+        <Button variant="outline-secondary" className="icon-btn" onClick={() => navigate('/profile')}>
+          <FaUser />
+        </Button>
+      </Form>
+    </div>
+  </Container>
+</Navbar>
+
   );
 };
 

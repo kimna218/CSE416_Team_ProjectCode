@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import pkg from "pg";
 import dotenv from 'dotenv';
 dotenv.config();
+
 const { Pool } = pkg;
 
 const app = express();
@@ -28,7 +29,9 @@ const pool = new Pool({
 
 console.log("Success to connect");
 
-// 테이블 생성
+
+// CREATE TABLES
+// Recipe Page
 await pool.query(`
   CREATE TABLE IF NOT EXISTS recipes (
     id SERIAL PRIMARY KEY,
@@ -71,14 +74,6 @@ await pool.query(`
 `);
 
 await pool.query(`
-  CREATE TABLE IF NOT EXISTS post_likes (
-    post_id INT REFERENCES posts(id) ON DELETE CASCADE,
-    likes INT DEFAULT 0,
-    PRIMARY KEY (post_id)
-  )
-`);
-
-await pool.query(`
   CREATE TABLE IF NOT EXISTS post_comments (
     id SERIAL PRIMARY KEY,
     post_id INT REFERENCES posts(id) ON DELETE CASCADE,
@@ -88,6 +83,15 @@ await pool.query(`
   )
 `);
 
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS post_likes (
+  post_id INT REFERENCES posts(id) ON DELETE CASCADE,
+  firebase_uid VARCHAR(255),
+  PRIMARY KEY (post_id, firebase_uid)
+);
+`);
+
+// User Page
 await pool.query(`
   CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -224,7 +228,8 @@ const extractStepsFromRecipe = (recipe) => {
   return steps;
 };
 
-// API 라우터
+
+// API Routers
 app.get("/recipes", async (req, res) => {
   const result = await pool.query("SELECT * FROM recipes");
   res.json(result.rows);
@@ -286,7 +291,7 @@ app.get("/recipes/detail/:id/steps", async (req, res) => {
       [recipeId]
     );
 
-    res.json(result.rows); // 배열로 보냄
+    res.json(result.rows);
   } catch (err) {
     console.error("Fetch steps error:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -333,14 +338,67 @@ app.post("/posts", async (req, res) => {
 });
 
 app.post("/posts/:postId/like", async (req, res) => {
+  const { firebase_uid } = req.body;
   const postId = parseInt(req.params.postId);
-  await pool.query(`
-    INSERT INTO post_likes (post_id, likes)
-    VALUES ($1, 1)
-    ON CONFLICT (post_id)
-    DO UPDATE SET likes = post_likes.likes + 1
-  `, [postId]);
-  res.json({ success: true });
+
+  if (!firebase_uid) {
+    return res.status(400).json({ error: "firebase_uid is required" });
+  }
+
+  try {
+    const check = await pool.query(
+      `SELECT * FROM post_likes WHERE post_id = $1 AND firebase_uid = $2`,
+      [postId, firebase_uid]
+    );
+
+    if (check.rows.length > 0) {
+      await pool.query(
+        `DELETE FROM post_likes WHERE post_id = $1 AND firebase_uid = $2`,
+        [postId, firebase_uid]
+      );
+      return res.json({ liked: false });
+    } else {
+      await pool.query(
+        `INSERT INTO post_likes (post_id, firebase_uid)
+         VALUES ($1, $2)`,
+        [postId, firebase_uid]
+      );
+      return res.json({ liked: true });
+    }
+  } catch (err) {
+    console.error("Failed to toggle like:", err);
+    res.status(500).json({ error: "Failed to toggle like" });
+  }
+});
+
+// All posts with like counts
+app.get("/posts/likes", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT post_id, COUNT(*) AS likes
+      FROM post_likes
+      GROUP BY post_id
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Failed to fetch likes:", err);
+    res.status(500).json({ error: "Failed to fetch likes" });
+  }
+});
+
+// Get all posts liked by a specific user
+app.get("/users/:firebase_uid/likes", async (req, res) => {
+  const { firebase_uid } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT post_id FROM post_likes WHERE firebase_uid = $1`,
+      [firebase_uid]
+    );
+    res.json(result.rows); // [{ post_id: 1 }, ...]
+  } catch (err) {
+    console.error("Failed to get user likes:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.get("/posts/:postId/comments", async (req, res) => {
@@ -366,6 +424,24 @@ app.post("/posts/:postId/comments", async (req, res) => {
   } catch (err) {
     console.error("Failed to insert comment:", err);
     res.status(500).json({ error: "Failed to insert comment" });
+  }
+});
+
+app.post("/posts/:postId/like", async (req, res) => {
+  const { firebase_uid } = req.body;
+  const postId = parseInt(req.params.postId);
+
+  try {
+    await pool.query(
+      `INSERT INTO post_likes (post_id, firebase_uid)
+       VALUES ($1, $2)
+       ON CONFLICT DO NOTHING`,
+      [postId, firebase_uid]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Failed to like post:", err);
+    res.status(500).json({ error: "Failed to like post" });
   }
 });
 
@@ -587,6 +663,64 @@ app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+// Recommendation API
+// GET /recommend-recipes?uid=xxxx
+app.get("/recommend-recipes", async (req, res) => {
+  const uid = req.query.uid;
+  if (!uid) return res.status(400).json({ error: "Missing UID" });
+
+  const user = await getUserByUID(uid); // DB에서 liked/disliked_ingredients 가져오는 함수
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  const liked = user.liked_ingredients || [];
+  const disliked = user.disliked_ingredients || [];
+
+  const prompt = `
+You are a recipe recommender.
+This user likes: ${liked.join(", ")}.
+This user dislikes: ${disliked.join(", ")}.
+Recommend 5 creative recipe names (title only) that match their preferences. Return them in JSON format as:
+[
+  "Recipe Name 1",
+  "Recipe Name 2",
+  ...
+]
+`;
+
+  const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  const data = await openaiRes.json();
+  const text = data.choices[0].message.content;
+  const recipes = JSON.parse(text);
+  res.json({ recommendations: recipes });
+});
+
+
+
+// 디버깅용 구문
+app.get("/admin/reset-feed", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM post_likes");
+    await pool.query("DELETE FROM post_comments");
+    await pool.query("DELETE FROM posts");
+    res.status(200).json({ message: "Feed reset successful (GET method)" });
+  } catch (err) {
+    console.error("Feed reset error:", err);
+    res.status(500).json({ error: "Failed to reset feed" });
+  }
+});
+
 
 // 서버 시작
 const PORT = process.env.PORT || 5001;
