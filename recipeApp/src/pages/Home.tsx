@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/Home.css";
+import { getAuth } from "firebase/auth";
 
 interface Recipe {
   id: number;
@@ -30,19 +31,23 @@ function Home() {
   const recipesPerPage = 12;
 
   const fetchRecommended = async () => {
-  const uid = getAuth().currentUser?.uid;
-  if (!uid) return;
+    const uid = getAuth().currentUser?.uid;
+    if (!uid) {
+      console.log("User not authenticated");
+      setRecommendedRecipes([]);
+      return;
+    }
 
-  try {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`
-    );
-    const data = await res.json();
-    setRecommendedRecipes(data);
-  } catch (err) {
-    console.error("Failed to fetch recommended recipes", err);
-  }
-};
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`
+      );
+      const data = await res.json();
+      setRecommendedRecipes(data);
+    } catch (err) {
+      console.error("Failed to fetch recommended recipes", err);
+    }
+  };
 
   useEffect(() => {
     const fetchRecipesWithNutrition = async () => {
@@ -72,7 +77,9 @@ function Home() {
 
     const fetchPopularRecipes = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/popular`);
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/recipes/popular`
+        );
         const data: Recipe[] = await res.json();
         setPopularRecipes(data);
       } catch (err) {
@@ -134,29 +141,29 @@ function Home() {
       </div>
 
       <div className="categories-preview">
-  <h2>AI Recommended Recipes (From DB)</h2>
-  <div className="home-recipe-grid">
-    {recommendedRecipes.length > 0 ? (
-      recommendedRecipes.map((recipe) => (
-        <div
-          key={recipe.id}
-          className="home-recipe-card"
-          onClick={() => handleClick(recipe)}
-        >
-          <img
-            src={recipe.image_url}
-            alt={recipe.name}
-            className="home-recipe-image"
-          />
-          <p className="home-recipe-name">{recipe.name}</p>
-          <p className="home-reason">{recipe.reason}</p>
+        <h2>AI Recommended Recipes (From DB)</h2>
+        <div className="home-recipe-grid">
+          {recommendedRecipes.length > 0 ? (
+            recommendedRecipes.map((recipe) => (
+              <div
+                key={recipe.id}
+                className="home-recipe-card"
+                onClick={() => handleClick(recipe)}
+              >
+                <img
+                  src={recipe.image_url}
+                  alt={recipe.name}
+                  className="home-recipe-image"
+                />
+                <p className="home-recipe-name">{recipe.name}</p>
+                <p className="home-reason">{recipe.reason}</p>
+              </div>
+            ))
+          ) : (
+            <p>Loading recommendations...</p>
+          )}
         </div>
-      ))
-    ) : (
-      <p>Loading recommendations...</p>
-    )}
-  </div>
-</div>
+      </div>
 
       <div className="popular-recipes">
         <h2>Popular Recipes</h2>
@@ -167,7 +174,11 @@ function Home() {
               className="popular-recipe-card"
               onClick={() => handleClick(recipe)}
             >
-              <img src={recipe.image_url} alt={recipe.name} className="popular-recipe-image" />
+              <img
+                src={recipe.image_url}
+                alt={recipe.name}
+                className="popular-recipe-image"
+              />
               <p className="home-recipe-name">{recipe.name}</p>
             </div>
           ))}
