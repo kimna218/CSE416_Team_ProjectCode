@@ -5,13 +5,11 @@ import pkg from "pg";
 import dotenv from "dotenv";
 dotenv.config();
 
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 
-const openai = new OpenAIApi(
-  new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
-);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 const { Pool } = pkg;
 
@@ -235,7 +233,10 @@ const extractStepsFromRecipe = (recipe) => {
 
 export async function getUserByUID(uid) {
   try {
-    const result = await pool.query("SELECT * FROM users WHERE firebase_uid = $1", [uid]);
+    const result = await pool.query(
+      "SELECT * FROM users WHERE firebase_uid = $1",
+      [uid]
+    );
     return result.rows[0];
   } catch (err) {
     console.error("Error fetching user by UID:", err);
@@ -567,10 +568,9 @@ app.post("/users/:firebase_uid/favorites", async (req, res) => {
       favorites.push(recipeName);
 
       // likes 수 +1
-      await pool.query(
-        "UPDATE recipes SET likes = likes + 1 WHERE name = $1",
-        [recipeName]
-      );
+      await pool.query("UPDATE recipes SET likes = likes + 1 WHERE name = $1", [
+        recipeName,
+      ]);
     }
 
     await pool.query(
@@ -583,7 +583,6 @@ app.post("/users/:firebase_uid/favorites", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // 즐겨찾기 제거
 app.delete("/users/:firebase_uid/favorites", async (req, res) => {
@@ -622,7 +621,6 @@ app.delete("/users/:firebase_uid/favorites", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 /* * * * * * * * * * */
 /*     Feedback      */
@@ -718,7 +716,9 @@ app.get("/recommend-recipes", async (req, res) => {
     const recipeListString = recipeData
       .map(
         (r, i) =>
-          `${i + 1}. ${r.name} (Category: ${r.category}, Ingredients: ${r.ingredients})`
+          `${i + 1}. ${r.name} (Category: ${r.category}, Ingredients: ${
+            r.ingredients
+          })`
       )
       .join("\n");
 
@@ -742,12 +742,17 @@ Here is the recipe list:
 ${recipeListString}
 `;
 
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
     });
 
-    const content = response.data.choices[0].message.content.trim();
+    const content = response.choices[0].message.content;
     try {
       const recommended = JSON.parse(content);
       const ids = recommended.map((r) => r.id);
@@ -774,7 +779,6 @@ ${recipeListString}
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // 디버깅용 구문
 app.get("/admin/reset-feed", async (req, res) => {
