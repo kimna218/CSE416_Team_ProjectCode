@@ -84,8 +84,6 @@ await pool.query(`
 `);
 
 await pool.query(`
-  DROP TABLE post_likes;
-
   CREATE TABLE IF NOT EXISTS post_likes (
   post_id INT REFERENCES posts(id) ON DELETE CASCADE,
   firebase_uid VARCHAR(255),
