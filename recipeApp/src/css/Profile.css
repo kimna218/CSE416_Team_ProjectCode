@@ -1,132 +1,159 @@
+/* Page Layout */
 .profile-page {
   font-family: 'Inter', sans-serif;
+  justify-content: center;
+  align-items: center;
   padding: 80px 20px;
-  text-align: center;
-  min-height: 100vh;
+  padding-right: 40px;
   width: 100vw;
 }
 
+/* Header */
 .profile-header {
+  text-align: center;
   margin-bottom: 40px;
 }
 
 .profile-image {
-  width: 150px;
-  height: 150px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  border: 3px solid #ffe2d1;
+  margin-bottom: 12px;
 }
 
 .profile-header h1 {
-  font-size: 2rem;
+  font-size: 24px;
+  margin: 0;
 }
 
 .profile-header p {
-  font-size: 1rem;
-  color: #6c757d;
-}
-
-.profile-section {
-  margin-bottom: 40px;
-}
-
-.profile-section h2 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-}
-
-.favorite-recipes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  justify-items: center;
-}
-
-.profile-recipe-card {
-  background-color: #ffffff;
-  border: 2px solid #e6e6e6;
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
-}
-
-.profile-recipe-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-}
-
-.recipe-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.recipe-name {
-  font-size: 1.2rem;
-  font-weight: bold;
-  padding: 10px 0;
-}
-
-.edit-button {
-  padding: 10px 20px;
-  font-size: 1rem;
-  color: #0a0a0a;
-  background-color: #ffe2d1;
-  border: none;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.edit-button:hover {
-  background-color: #ffe2d1;
+  font-size: 14px;
+  color: #777;
+  margin: 4px 0 12px;
 }
 
 .logout-button {
-  margin-top: 10px;
-  padding: 8px 16px;
   background-color: #ffe2d1;
-  color: rgb(7, 7, 7);
   border: none;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 30px;
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 .logout-button:hover {
-  background-color: #ffe2d1;
+  background-color: #ffccb3;
 }
 
+/* Section Titles */
+.profile-section {
+  margin-top: 40px;
+}
+
+.profile-section h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #ffd6c4;
+  padding-bottom: 4px;
+}
+
+/* Favorite Recipes */
+.favorite-recipes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.profile-recipe-card {
+  width: 140px;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.profile-recipe-card:hover {
+  transform: scale(1.05);
+}
+
+.recipe-image {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.recipe-name {
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* Preferences */
 .tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
-  margin-bottom: 8px;
-  justify-content: center;
 }
 
 .tag {
-  background-color: #eee;
-  border-radius: 12px;
+  background-color: #ffe2d1;
   padding: 6px 12px;
+  border-radius: 20px;
   font-size: 14px;
-  display: flex;
-  align-items: center;
-  position: relative;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s;
 }
 
 .tag:hover {
-  background-color: #e98c8c;
+  background-color: #ffc4a3;
 }
 
-.tag:hover .tag-close {
-  display: inline;
+/* Input + Button row */
+.profile-section input {
+  height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin-top: 6px;
+  margin-right: 8px;
+}
+
+.profile-section button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  background-color: #ffe2d1;
+}
+
+.profile-section button:hover {
+  background-color: #ffccb3;
+}
+
+.save-btn {
+  background-color: #ff7043;
+  color: white;
+  margin-right: 8px;
+}
+
+.save-btn:hover {
+  background-color: #e55c2b;
+}
+
+.cancel-btn {
+  background-color: #ddd;
+}
+
+.cancel-btn:hover {
+  background-color: #bbb;
+}
+
+.edit-button {
+  background-color: #ffe2d1;
+  margin-top: 8px;
 }

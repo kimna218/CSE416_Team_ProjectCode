@@ -89,6 +89,14 @@ await pool.query(`
 `);
 
 await pool.query(`
+  CREATE TABLE IF NOT EXISTS post_likes (
+  post_id INT REFERENCES posts(id) ON DELETE CASCADE,
+  firebase_uid VARCHAR(255),
+  PRIMARY KEY (post_id, firebase_uid)
+);
+`);
+
+await pool.query(`
   CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     firebase_uid VARCHAR(255) NOT NULL UNIQUE,
@@ -330,6 +338,24 @@ app.post("/posts/:postId/comments", async (req, res) => {
   } catch (err) {
     console.error("Failed to insert comment:", err);
     res.status(500).json({ error: "Failed to insert comment" });
+  }
+});
+
+app.post("/posts/:postId/like", async (req, res) => {
+  const { firebase_uid } = req.body;
+  const postId = parseInt(req.params.postId);
+
+  try {
+    await pool.query(
+      `INSERT INTO post_likes (post_id, firebase_uid)
+       VALUES ($1, $2)
+       ON CONFLICT DO NOTHING`,
+      [postId, firebase_uid]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Failed to like post:", err);
+    res.status(500).json({ error: "Failed to like post" });
   }
 });
 

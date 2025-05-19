@@ -80,7 +80,7 @@ const UserSetupPage: React.FC = () => {
               e.preventDefault();
               addItem(likedInput, likedList, setLikedList, () => setLikedInput(""));}}}
           />
-          <button onClick={() => addItem(likedInput, likedList, setLikedList, () => setLikedInput(""))}>
+          <button className="add-button" onClick={() => addItem(likedInput, likedList, setLikedList, () => setLikedInput(""))}>
             + Add
           </button>
         </div>
@@ -100,7 +100,7 @@ const UserSetupPage: React.FC = () => {
               e.preventDefault();
               addItem(dislikedInput, dislikedList, setDislikedList, () => setDislikedInput(""));}}}
           />
-          <button onClick={() => addItem(dislikedInput, dislikedList, setDislikedList, () => setDislikedInput(""))}>
+          <button className="add-button" onClick={() => addItem(dislikedInput, dislikedList, setDislikedList, () => setDislikedInput(""))}>
             + Add
           </button>
         </div>
@@ -110,7 +110,7 @@ const UserSetupPage: React.FC = () => {
         </p>
 
         <div className="button-group">
-          <button onClick={handleSubmit}>Save Profile</button>
+          <button onClick={handleSubmit} className="save-profile-button">Save Profile</button>
         </div>
       </div>
     </div>
