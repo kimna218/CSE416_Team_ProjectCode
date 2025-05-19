@@ -261,8 +261,9 @@ const Feed: React.FC = () => {
           />
         </div>
 
-        {previewUrl && (
-          <img src={previewUrl} alt="Preview" className="post-image" />
+        <div className="preview-container">
+          {previewUrl && (
+          <img src={previewUrl} alt="Preview" className="preview-file" />
         )}
         {uploadMessage && <p>{uploadMessage}</p>}
         <button
@@ -272,6 +273,7 @@ const Feed: React.FC = () => {
         >
           {isUploading ? "Uploading..." : "Upload"}
         </button>
+        </div>
       </section>
 
       <section className="post-grid">
