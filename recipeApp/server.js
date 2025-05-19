@@ -42,12 +42,15 @@ export async function getUserByUID(uid) {
 // CREATE TABLES
 // Recipe Page
 await pool.query(`
+  DROP TABLE IF EXISTS recipes CASCADE;
+
   CREATE TABLE IF NOT EXISTS recipes (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
     category VARCHAR(50),
     image_url VARCHAR(255),
-    ingredients TEXT
+    ingredients TEXT,
+    likes INTEGER DEFAULT 0
   )
 `);
 
