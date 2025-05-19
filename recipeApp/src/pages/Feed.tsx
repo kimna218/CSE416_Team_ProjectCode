@@ -30,14 +30,14 @@ const Feed: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [likes, setLikes] = useState<Record<number, number>>({});
   const [uploadMessage, setUploadMessage] = useState<string>("");
+  const [userLikes, setUserLikes] = useState<Record<number, boolean>>({});
 
   const CLOUDINARY_URL =
     "https://api.cloudinary.com/v1_1/dlm1w7msc/image/upload";
   const CLOUDINARY_PRESET = "ml_default";
 
   const auth = getAuth();
-  // const currentUser = auth.currentUser;
-  // const nickname = currentUser?.displayName || "Anonymous";
+  // const uid = auth.currentUser?.uid;
 
   const uploadImageToCloudinary = async (
     file: File
@@ -102,87 +102,129 @@ const Feed: React.FC = () => {
     }
   };
 
-  const handleLike = async (postId: number) => {
-    const likedKey = `liked_${postId}`;
-    if (localStorage.getItem(likedKey)) return;
+  const fetchUserLikes = async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
 
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/like`, {
-        method: "POST",
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/users/${uid}/likes`
+      );
+      const data: { post_id: number }[] = await res.json();
+
+      const likeStatus: Record<number, boolean> = {};
+      data.forEach(({ post_id }) => {
+        likeStatus[post_id] = true;
       });
-      setLikes((prev) => ({ ...prev, [postId]: (prev[postId] || 0) + 1 }));
-      localStorage.setItem(likedKey, "true");
+      setUserLikes(likeStatus);
     } catch (err) {
-      console.error("Failed to like post:", err);
+      console.error("Failed to fetch user likes:", err);
     }
   };
 
-const fetchNickname = async () => {
-  const uid = auth.currentUser?.uid;
-  if (!uid) return;
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${uid}`);
-  const data = await res.json();
-  return data.user.nickname;
-};
+  const handleLike = async (postId: number) => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
 
-const handleNewPost = async () => {
-  if (!newPostCaption || !uploadFile) return;
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/posts/${postId}/like`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid }), // 서버가 uid 필요하면
+        }
+      );
+      const result = await res.json();
 
-  const imageUrl = await uploadImageToCloudinary(uploadFile);
-  if (!imageUrl) return;
+      const liked = result.liked; // 서버가 true/false 반환한다고 가정
 
-  const nickname = await fetchNickname(); // ✅ 닉네임 가져오기
+      setLikes((prev) => ({
+        ...prev,
+        [postId]: liked
+          ? (prev[postId] || 0) + 1
+          : Math.max((prev[postId] || 1) - 1, 0),
+      }));
 
-  try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: nickname, // ⬅️ 가져온 닉네임 사용
-        caption: newPostCaption,
-        image_url: imageUrl,
-      }),
-    });
+      setUserLikes((prev) => ({
+        ...prev,
+        [postId]: liked,
+      }));
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+    }
+  };
 
-    const newPost = await res.json();
-    setPosts((prev) => [newPost, ...prev]);
-    setNewPostCaption('');
-    setUploadFile(null);
-    setPreviewUrl(null);
-  } catch (err) {
-    console.error('Failed to upload post:', err);
-  }
-};
+  const fetchNickname = async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${uid}`);
+    const data = await res.json();
+    return data.user.nickname;
+  };
 
-const handleCommentSubmit = async (postId: number) => {
-  const text = newCommentText[postId];
-  if (!text) return;
+  const handleNewPost = async () => {
+    if (!newPostCaption || !uploadFile) return;
 
-  const nickname = await fetchNickname();
+    const imageUrl = await uploadImageToCloudinary(uploadFile);
+    if (!imageUrl) return;
 
-  try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${postId}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: nickname,
-        text,
-      }),
-    });
+    const nickname = await fetchNickname(); // ✅ 닉네임 가져오기
 
-    const newComment = await res.json();
-    setComments((prev) => ({
-      ...prev,
-      [postId]: [...(prev[postId] || []), newComment],
-    }));
-    setNewCommentText((prev) => ({ ...prev, [postId]: '' }));
-  } catch (err) {
-    console.error('Failed to submit comment:', err);
-  }
-};
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: nickname, // ⬅️ 가져온 닉네임 사용
+          caption: newPostCaption,
+          image_url: imageUrl,
+        }),
+      });
+
+      const newPost = await res.json();
+      setPosts((prev) => [newPost, ...prev]);
+      setNewPostCaption("");
+      setUploadFile(null);
+      setPreviewUrl(null);
+    } catch (err) {
+      console.error("Failed to upload post:", err);
+    }
+  };
+
+  const handleCommentSubmit = async (postId: number) => {
+    const text = newCommentText[postId];
+    if (!text) return;
+
+    const nickname = await fetchNickname();
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/posts/${postId}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: nickname,
+            text,
+          }),
+        }
+      );
+
+      const newComment = await res.json();
+      setComments((prev) => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), newComment],
+      }));
+      setNewCommentText((prev) => ({ ...prev, [postId]: "" }));
+    } catch (err) {
+      console.error("Failed to submit comment:", err);
+    }
+  };
 
   useEffect(() => {
     fetchPosts();
+    fetchUserLikes();
   }, []);
 
   return (
@@ -243,7 +285,8 @@ const handleCommentSubmit = async (postId: number) => {
             </div>
             <div className="post-actions">
               <button className="like-btn" onClick={() => handleLike(post.id)}>
-                ❤️ Like {likes[post.id] || 0}
+                {userLikes[post.id] ? "💔 Unlike" : "❤️ Like"}{" "}
+                {likes[post.id] || 0}
               </button>
               <button
                 className="comment-toggle"

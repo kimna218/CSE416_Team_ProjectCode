@@ -71,14 +71,6 @@ await pool.query(`
 `);
 
 await pool.query(`
-  CREATE TABLE IF NOT EXISTS post_likes (
-    post_id INT REFERENCES posts(id) ON DELETE CASCADE,
-    likes INT DEFAULT 0,
-    PRIMARY KEY (post_id)
-  )
-`);
-
-await pool.query(`
   CREATE TABLE IF NOT EXISTS post_comments (
     id SERIAL PRIMARY KEY,
     post_id INT REFERENCES posts(id) ON DELETE CASCADE,
@@ -322,14 +314,65 @@ app.post("/posts", async (req, res) => {
 });
 
 app.post("/posts/:postId/like", async (req, res) => {
+  const { firebase_uid } = req.body;
   const postId = parseInt(req.params.postId);
-  await pool.query(`
-    INSERT INTO post_likes (post_id, likes)
-    VALUES ($1, 1)
-    ON CONFLICT (post_id)
-    DO UPDATE SET likes = post_likes.likes + 1
-  `, [postId]);
-  res.json({ success: true });
+
+  try {
+    const check = await pool.query(
+      `SELECT * FROM post_likes WHERE post_id = $1 AND firebase_uid = $2`,
+      [postId, firebase_uid]
+    );
+
+    if (check.rows.length > 0) {
+      // 이미 좋아요 누른 상태 -> 삭제
+      await pool.query(
+        `DELETE FROM post_likes WHERE post_id = $1 AND firebase_uid = $2`,
+        [postId, firebase_uid]
+      );
+      return res.json({ liked: false }); // 취소됨
+    } else {
+      // 좋아요 안 누른 상태 -> 추가
+      await pool.query(
+        `INSERT INTO post_likes (post_id, firebase_uid)
+         VALUES ($1, $2)`,
+        [postId, firebase_uid]
+      );
+      return res.json({ liked: true }); // 좋아요 추가됨
+    }
+  } catch (err) {
+    console.error("Failed to toggle like:", err);
+    res.status(500).json({ error: "Failed to toggle like" });
+  }
+});
+
+// 전체 포스트별 좋아요 수
+app.get("/posts/likes", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT post_id, COUNT(*) AS likes
+      FROM post_likes
+      GROUP BY post_id
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Failed to fetch likes:", err);
+    res.status(500).json({ error: "Failed to fetch likes" });
+  }
+});
+
+// 특정 유저가 좋아요한 포스트 목록
+app.get("/users/:firebase_uid/likes", async (req, res) => {
+  const { firebase_uid } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT post_id FROM post_likes WHERE firebase_uid = $1`,
+      [firebase_uid]
+    );
+    res.json(result.rows); // [{ post_id: 1 }, ...]
+  } catch (err) {
+    console.error("Failed to get user likes:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.get("/posts/:postId/comments", async (req, res) => {
