@@ -298,6 +298,25 @@ app.get("/recipes/detail/:id/steps", async (req, res) => {
   }
 });
 
+// 인기 레시피 4개 조회 (likes 기준)
+app.get("/recipes/popular", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT id, name, image_url, category
+      FROM recipes
+      ORDER BY likes DESC
+      LIMIT 4
+    `);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error("Error fetching popular recipes:", err);
+    res.status(500).json({ error: "Failed to fetch popular recipes" });
+  }
+});
+
+/* * * * * * * * */
+/*     Post      */
+/* * * * * * * * */
 app.get("/posts", async (req, res) => {
   const result = await pool.query("SELECT * FROM posts ORDER BY created_at DESC");
   res.json(result.rows);
@@ -517,6 +536,12 @@ app.post("/users/:firebase_uid/favorites", async (req, res) => {
     const favorites = JSON.parse(result.rows[0].favorite_recipes || "[]");
     if (!favorites.includes(recipeName)) {
       favorites.push(recipeName);
+
+      // likes 수 +1
+      await pool.query(
+        "UPDATE recipes SET likes = likes + 1 WHERE name = $1",
+        [recipeName]
+      );
     }
 
     await pool.query(
@@ -529,6 +554,7 @@ app.post("/users/:firebase_uid/favorites", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // 즐겨찾기 제거
 app.delete("/users/:firebase_uid/favorites", async (req, res) => {
@@ -546,7 +572,16 @@ app.delete("/users/:firebase_uid/favorites", async (req, res) => {
     }
 
     let favorites = JSON.parse(result.rows[0].favorite_recipes || "[]");
+    const wasFavorited = favorites.includes(recipeName);
     favorites = favorites.filter((name) => name !== recipeName);
+
+    if (wasFavorited) {
+      // likes 수 -1 (최소 0)
+      await pool.query(
+        "UPDATE recipes SET likes = GREATEST(likes - 1, 0) WHERE name = $1",
+        [recipeName]
+      );
+    }
 
     await pool.query(
       "UPDATE users SET favorite_recipes = $1 WHERE firebase_uid = $2",
@@ -558,6 +593,7 @@ app.delete("/users/:firebase_uid/favorites", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 /* * * * * * * * * * */
 /*     Feedback      */

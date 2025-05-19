@@ -3,13 +3,6 @@ import { useNavigate } from "react-router-dom";
 import "../css/Home.css";
 import { getAuth } from "firebase/auth";
 
-const popularRecipes = [
-  { name: "Pancakes", image: "/images/pancakes.jpg" },
-  { name: "Omelette", image: "/images/omelette.jpg" },
-  { name: "Vanilla Ice Cream", image: "/images/dessert.jpg" },
-  { name: "Fried Eggs", image: "/images/breakfast.jpg" },
-];
-
 interface Recipe {
   id: number;
   name: string;
@@ -30,6 +23,7 @@ interface FullRecipe extends Recipe, Nutrition {}
 function Home() {
   const navigate = useNavigate();
   const [recipes, setRecipes] = useState<FullRecipe[]>([]);
+  const [popularRecipes, setPopularRecipes] = useState<Recipe[]>([]);
   const [sortKey, setSortKey] = useState<string>("protein");
   const [recommendedRecipes, setRecommendedRecipes] = useState<string[]>([]);
 
@@ -75,7 +69,18 @@ function Home() {
       setRecipes(filtered);
     };
 
+    const fetchPopularRecipes = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/popular`);
+        const data: Recipe[] = await res.json();
+        setPopularRecipes(data);
+      } catch (err) {
+        console.error("Failed to fetch popular recipes:", err);
+      }
+    };
+
     fetchRecipesWithNutrition();
+    fetchPopularRecipes();
   }, []);
 
   const sortedRecipes = [...recipes].sort((a, b) => {
@@ -116,6 +121,11 @@ function Home() {
       </div>
 
       <div className="categories-preview">
+
+        <h2>Recommendation Recipes</h2>
+        <div className="home-category-grid">
+          <p>Coming Soon...</p>
+
   <h2>Recommendation Recipes</h2>
   <div className="home-category-grid">
     {recommendedRecipes.length === 0 ? (
@@ -140,9 +150,13 @@ function Home() {
       <div className="popular-recipes">
         <h2>Popular Recipes</h2>
         <div className="home-recipe-grid">
-          {popularRecipes.map((recipe, index) => (
-            <div key={index} className="popular-recipe-card">
-              <img src={recipe.image} alt={recipe.name} className="popular-recipe-image" />
+          {popularRecipes.map((recipe) => (
+            <div
+              key={recipe.id}
+              className="popular-recipe-card"
+              onClick={() => handleClick(recipe)}
+            >
+              <img src={recipe.image_url} alt={recipe.name} className="popular-recipe-image" />
               <p className="home-recipe-name">{recipe.name}</p>
             </div>
           ))}

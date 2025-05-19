@@ -36,6 +36,8 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
     gap: 30px;
+    margin-left: 7%;
+    margin-right: 7%;
 }
 
 .home-recipe-grid {
