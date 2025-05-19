@@ -153,7 +153,7 @@ function Home() {
                 <img
                   src={recipe.image_url}
                   alt={recipe.name}
-                  className="home-recipe-image"
+                  className="popular-recipe-image"
                 />
                 <p className="home-recipe-name">{recipe.name}</p>
                 <p className="home-reason">{recipe.reason}</p>
