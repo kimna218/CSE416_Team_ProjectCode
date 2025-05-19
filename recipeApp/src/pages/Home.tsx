@@ -25,30 +25,27 @@ function Home() {
   const [recipes, setRecipes] = useState<FullRecipe[]>([]);
   const [popularRecipes, setPopularRecipes] = useState<Recipe[]>([]);
   const [sortKey, setSortKey] = useState<string>("protein");
-  const [recommendedRecipes, setRecommendedRecipes] = useState<string[]>([]);
+  const [recommendedRecipes, setRecommendedRecipes] = useState<any[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const recipesPerPage = 12;
 
+  const fetchRecommended = async () => {
+  const uid = getAuth().currentUser?.uid;
+  if (!uid) return;
+
+  try {
+    const res = await fetch(
+      `${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`
+    );
+    const data = await res.json();
+    setRecommendedRecipes(data);
+  } catch (err) {
+    console.error("Failed to fetch recommended recipes", err);
+  }
+};
+
   useEffect(() => {
-    const fetchRecommendedRecipes = async () => {
-      const uid = getAuth().currentUser?.uid;
-      console.log("User ID:", uid);
-      if (!uid) return;
-
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`
-        );
-        const data = await res.json();
-        setRecommendedRecipes(data.recommendations); // 예: ["Garlic Chicken", "Spicy Tomato Pasta", ...]
-      } catch (err) {
-        console.error("Failed to fetch recommended recipes:", err);
-      }
-    };
-
-    fetchRecommendedRecipes();
-
     const fetchRecipesWithNutrition = async () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
       const data: Recipe[] = await res.json();
@@ -86,6 +83,7 @@ function Home() {
 
     fetchRecipesWithNutrition();
     fetchPopularRecipes();
+    fetchRecommended();
   }, []);
 
   const sortedRecipes = [...recipes].sort((a, b) => {
@@ -137,28 +135,29 @@ function Home() {
       </div>
 
       <div className="categories-preview">
-        <h2>Recommendation Recipes</h2>
-        <div className="home-category-grid">
-          {recommendedRecipes.length === 0 ? (
-            <p>Loading personalized recipes...</p>
-          ) : (
-            recommendedRecipes.map((name, index) => (
-              <div
-                key={index}
-                className="home-recipe-card"
-                onClick={() =>
-                  navigate(`/recipes/detail/${encodeURIComponent(name)}`)
-                }
-              >
-                <div className="home-recipe-placeholder">
-                  <p className="home-recipe-name">{name}</p>
-                  <p className="nutrition-info">(Click to view details)</p>
-                </div>
-              </div>
-            ))
-          )}
+  <h2>AI Recommended Recipes (From DB)</h2>
+  <div className="home-recipe-grid">
+    {recommendedRecipes.length > 0 ? (
+      recommendedRecipes.map((recipe) => (
+        <div
+          key={recipe.id}
+          className="home-recipe-card"
+          onClick={() => handleClick(recipe)}
+        >
+          <img
+            src={recipe.image_url}
+            alt={recipe.name}
+            className="home-recipe-image"
+          />
+          <p className="home-recipe-name">{recipe.name}</p>
+          <p className="home-reason">{recipe.reason}</p>
         </div>
-      </div>
+      ))
+    ) : (
+      <p>Loading recommendations...</p>
+    )}
+  </div>
+</div>
 
       <div className="popular-recipes">
         <h2>Popular Recipes</h2>
