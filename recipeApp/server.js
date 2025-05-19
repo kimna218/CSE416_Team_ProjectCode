@@ -693,9 +693,98 @@ app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
 });
 
 // Recommendation API
+// app.get("/recommend-recipes", async (req, res) => {
+//   const uid = req.query.uid;
+//   if (!uid) return res.status(400).json({ error: "Missing uid" });
+
+//   try {
+//     const userRes = await pool.query(
+//       "SELECT liked_ingredients, disliked_ingredients FROM users WHERE firebase_uid = $1",
+//       [uid]
+//     );
+
+//     if (userRes.rows.length === 0) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+
+//     const liked = JSON.parse(userRes.rows[0].liked_ingredients || "[]");
+//     const disliked = JSON.parse(userRes.rows[0].disliked_ingredients || "[]");
+
+//     const recipeRes = await pool.query(`
+//       SELECT id, name, category, ingredients FROM recipes
+//     `);
+//     const recipeData = recipeRes.rows;
+
+//     const recipeListString = recipeData
+//       .map(
+//         (r, i) =>
+//           `${i + 1}. ${r.name} (Category: ${r.category}, Ingredients: ${
+//             r.ingredients
+//           })`
+//       )
+//       .join("\n");
+
+//     const prompt = `
+// You are a recipe recommendation assistant. The user likes these ingredients: ${liked.join(
+//       ", "
+//     )}, and dislikes these: ${disliked.join(
+//       ", "
+//     )}. You are given a list of 100 recipes. Choose ONLY 5 recipes that:
+// - Contain many of the liked ingredients
+// - Do NOT contain any disliked ingredients
+
+// Only recommend from this list. Return exactly this JSON format:
+
+// [
+//   { "id": 1, "name": "Recipe Name", "reason": "Short reason" },
+//   ...
+// ]
+
+// Here is the recipe list:
+// ${recipeListString}
+// `;
+
+//     const response = await openai.chat.completions.create({
+//       model: "gpt-3.5-turbo",
+//       messages: [
+//         {
+//           role: "user",
+//           content: prompt,
+//         },
+//       ],
+//     });
+
+//     const content = response.choices[0].message.content;
+//     try {
+//       const recommended = JSON.parse(content);
+//       const ids = recommended.map((r) => r.id);
+
+//       // DB에서 상세정보 불러오기
+//       const finalRes = await pool.query(
+//         `SELECT id, name, category, image_url FROM recipes WHERE id = ANY($1)`,
+//         [ids]
+//       );
+
+//       // reason도 포함해서 반환
+//       const enriched = finalRes.rows.map((rec) => {
+//         const reason = recommended.find((r) => r.id === rec.id)?.reason || "";
+//         return { ...rec, reason };
+//       });
+
+//       res.json(enriched);
+//     } catch (err) {
+//       console.error("OpenAI JSON parse error:\n", content);
+//       res.status(500).json({ error: "Invalid OpenAI response format." });
+//     }
+//   } catch (err) {
+//     console.error("Error in recommend-recipes:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
 app.get("/recommend-recipes", async (req, res) => {
   const uid = req.query.uid;
-  if (!uid) return res.status(400).json({ error: "Missing uid" });
+  if (!uid) return res.status(400).json({ error: "Missing UID" });
 
   try {
     const userRes = await pool.query(
@@ -710,77 +799,32 @@ app.get("/recommend-recipes", async (req, res) => {
     const liked = JSON.parse(userRes.rows[0].liked_ingredients || "[]");
     const disliked = JSON.parse(userRes.rows[0].disliked_ingredients || "[]");
 
-    const recipeRes = await pool.query(`
-      SELECT id, name, category, ingredients FROM recipes
-    `);
-    const recipeData = recipeRes.rows;
+    const recipesRes = await pool.query("SELECT * FROM recipes");
+    const scored = recipesRes.rows
+      .map((r) => {
+        const ingredients = (r.ingredients || "").toLowerCase();
+        let score = 0;
 
-    const recipeListString = recipeData
-      .map(
-        (r, i) =>
-          `${i + 1}. ${r.name} (Category: ${r.category}, Ingredients: ${
-            r.ingredients
-          })`
-      )
-      .join("\n");
+        for (const l of liked) {
+          if (ingredients.includes(l.toLowerCase())) score++;
+        }
+        for (const d of disliked) {
+          if (ingredients.includes(d.toLowerCase())) score -= 5;
+        }
 
-    const prompt = `
-You are a recipe recommendation assistant. The user likes these ingredients: ${liked.join(
-      ", "
-    )}, and dislikes these: ${disliked.join(
-      ", "
-    )}. You are given a list of 100 recipes. Choose ONLY 5 recipes that:
-- Contain many of the liked ingredients
-- Do NOT contain any disliked ingredients
+        return { ...r, score, reason: `Matched score: ${score}` };
+      })
+      .filter((r) => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
 
-Only recommend from this list. Return exactly this JSON format:
-
-[
-  { "id": 1, "name": "Recipe Name", "reason": "Short reason" },
-  ...
-]
-
-Here is the recipe list:
-${recipeListString}
-`;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    });
-
-    const content = response.choices[0].message.content;
-    try {
-      const recommended = JSON.parse(content);
-      const ids = recommended.map((r) => r.id);
-
-      // DB에서 상세정보 불러오기
-      const finalRes = await pool.query(
-        `SELECT id, name, category, image_url FROM recipes WHERE id = ANY($1)`,
-        [ids]
-      );
-
-      // reason도 포함해서 반환
-      const enriched = finalRes.rows.map((rec) => {
-        const reason = recommended.find((r) => r.id === rec.id)?.reason || "";
-        return { ...rec, reason };
-      });
-
-      res.json(enriched);
-    } catch (err) {
-      console.error("OpenAI JSON parse error:\n", content);
-      res.status(500).json({ error: "Invalid OpenAI response format." });
-    }
+    res.json(scored);
   } catch (err) {
-    console.error("Error in recommend-recipes:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Simple recommender error:", err);
+    res.status(500).json({ error: "Internal error" });
   }
 });
+
 
 // 디버깅용 구문
 app.get("/admin/reset-feed", async (req, res) => {
