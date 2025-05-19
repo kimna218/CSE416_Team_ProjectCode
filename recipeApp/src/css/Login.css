@@ -1,0 +1,149 @@
+.login-page {
+    font-family: 'Inter', sans-serif;
+    width: 100vw;
+    padding: 80px 80px;
+    padding-right: 100px;
+}
+
+.login-box {
+    text-align: center;
+    padding: 40px;
+}
+
+.app-title {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #ff7043;
+}
+
+.login-message {
+    font-size: 16px;
+    margin-bottom: 25px;
+    color: #555;
+}
+
+.google-login-button {
+    background-color: #ffffff;
+    border: 2px solid #ff7043;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #ff7043;
+    transition: all 0.3s ease;
+}
+
+.google-login-button:hover {
+    background-color: #ff7043;
+    color: white;
+}
+
+
+/* * * * * * * * */
+/* UserSetupPage */
+/* * * * * * * * */
+
+.user-setup-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+    font-family: 'Inter', sans-serif;
+    width: 100vw;
+    padding: 80px 80px;
+    padding-right: 100px;
+}
+
+.setup-box {
+    padding: 40px;
+    width: 400px;
+    text-align: center;
+}
+
+.setup-box h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.setup-box h3 {
+    font-size: 15px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.setup-box label {
+    display: block;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.setup-box input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    margin-right: 5%;
+}
+
+.input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.input-row input {
+    flex: 1;
+}
+
+.setup-box button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #ffe2d1;
+    color: black;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.setup-box button:hover {
+    background-color: #ffe2d1;
+}
+
+.setup-box span {
+    display: inline-block;
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 12px;
+    margin: 4px 4px 0 0;
+    font-size: 14px;
+}
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.tag {
+    background-color: #eee;
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.tag:hover {
+    background-color: #e98c8c;
+}
+
+.tag:hover .tag-close {
+    display: inline;
+}

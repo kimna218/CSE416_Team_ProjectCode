@@ -1,29 +1,85 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../css/Profile.css";
+import { getAuth, signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+
+interface Recipe {
+  id: number;
+  name: string;
+  category: string;
+  image_url: string;
+  ingredients: string;
+}
 
 function Profile() {
-  const [user] = useState({
-    name: "John Doe",
-    email: "johndoe@example.com",
-    profileImage: "/images/default-profile.jpg",
-    favoriteRecipes: [
-      { name: "Pancakes", image: "/images/pancakes.jpg" },
-      { name: "Grilled Chicken", image: "/images/grilled-chicken.jpg" },
-    ],
-  });
-
-  const [preferences, setPreferences] = useState({
-    dietary: "Vegetarian",
-    dislikedIngredients: ["onions", "garlic"],
-    likedIngredients: ["onions", "garlic"],
-  });
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [dietaryInput, setDietaryInput] = useState(preferences.dietary);
   const [dislikedInput, setDislikedInput] = useState("");
-  const [dislikedList, setDislikedList] = useState(preferences.dislikedIngredients);
-  const [likedList, setLikedList] = useState(preferences.likedIngredients);
   const [likedInput, setLikedInput] = useState("");
+  const [dislikedList, setDislikedList] = useState<string[]>([]);
+  const [likedList, setLikedList] = useState<string[]>([]);
+  const [initialDisliked, setInitialDisliked] = useState<string[]>([]);
+  const [initialLiked, setInitialLiked] = useState<string[]>([]);
+  const [favoriteRecipesData, setFavoriteRecipesData] = useState<Recipe[]>([]);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    const fetchUserInfo = async () => {
+      if (currentUser) {
+        try {
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${currentUser.uid}`);
+          const data = await res.json();
+          const userData = data.user;
+          const recipeNames = JSON.parse(data.user.favorite_recipes || "[]");
+          setUser({
+            name: userData.nickname || currentUser.displayName,
+            email: userData.email || "",
+            profileImage: currentUser.photoURL || "/images/default-profile.jpg",
+            favoriteRecipes: recipeNames,
+          });
+
+          const liked = JSON.parse(userData.liked_ingredients || "[]");
+          const disliked = JSON.parse(userData.disliked_ingredients || "[]");
+
+          setLikedList(liked);
+          setDislikedList(disliked);
+          setInitialLiked(liked);
+          setInitialDisliked(disliked);
+          setFavoriteRecipesData(recipeNames);
+
+          // ✅ 각 레시피 정보 개별 fetch
+          const fetchedRecipes = await Promise.all(
+            recipeNames.map(async (name: string) => {
+              const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${encodeURIComponent(name)}`);
+              return await res.json(); // { id, name, image_url, ... }
+            })
+          );
+
+          setFavoriteRecipesData(fetchedRecipes);
+
+        } catch (err) {
+          console.error("Failed to fetch user info:", err);
+        }
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(getAuth());
+      alert("Successfully Logged Out.");
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout failed", err);
+      alert("Failed to logout. Please try again.");
+    }
+  };
 
   const handleAddDislike = () => {
     if (dislikedInput && !dislikedList.includes(dislikedInput)) {
@@ -39,31 +95,53 @@ function Profile() {
     }
   };
 
-  const handleRemoveDislike = (item: string) => {
+  const handleRemoveDisliked = (item: string) => {
     setDislikedList(dislikedList.filter(i => i !== item));
   };
 
-  const handleRemoveLike = (item: string) => {
+  const handleRemoveLiked = (item: string) => {
     setLikedList(likedList.filter(i => i !== item));
   };
 
-  const handleSave = () => {
-    setPreferences({
-      dietary: dietaryInput,
-      dislikedIngredients: dislikedList,
-      likedIngredients: likedList,
-    });
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+
+      await fetch(`${import.meta.env.VITE_API_URL}/users/${currentUser.uid}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          liked_ingredients: likedList,
+          disliked_ingredients: dislikedList,
+        }),
+      });
+
+      setInitialLiked(likedList);
+      setInitialDisliked(dislikedList);
+      setIsEditing(false);
+      alert("Preferences saved!");
+    } catch (err) {
+      console.error("Failed to update preferences:", err);
+      alert("Failed to save preferences.");
+    }
   };
 
   const handleCancel = () => {
-    setDietaryInput(preferences.dietary);
-    setDislikedList(preferences.dislikedIngredients);
-    setLikedList(preferences.likedIngredients);
-    setDislikedInput("");
+    setLikedList(initialLiked);
+    setDislikedList(initialDisliked);
     setLikedInput("");
+    setDislikedInput("");
     setIsEditing(false);
   };
+
+  const handleClick = (recipe: Recipe) => {
+    const path = `/recipes/detail/${encodeURIComponent(recipe.name)}`;
+    navigate(path);
+  };
+
+  if (!user) return <p>Loading profile...</p>;
 
   return (
     <div className="profile-page">
@@ -75,17 +153,22 @@ function Profile() {
         />
         <h1>{user.name}</h1>
         <p>{user.email}</p>
+        <button className="logout-button" onClick={handleLogout}>Logout</button>
       </div>
 
       <div className="profile-section">
         <h2>Favorite Recipes</h2>
         <div className="favorite-recipes">
-          {user.favoriteRecipes.map((recipe, index) => (
-            <div key={index} className="recipe-card">
-              <img src={recipe.image} alt={recipe.name} className="recipe-image" />
-              <p className="recipe-name">{recipe.name}</p>
-            </div>
-          ))}
+          {user.favoriteRecipes.length === 0 ? (
+            <p>No favorite recipes yet.</p>
+          ) : (
+            favoriteRecipesData.map((recipe) => (
+              <div key={recipe.id} className="recipe-card" onClick={() => handleClick(recipe)}>
+                <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
+                <p className="recipe-name">{recipe.name}</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -94,52 +177,49 @@ function Profile() {
 
         {isEditing ? (
           <>
-            <div>
-              <label><strong>Dietary Preference:</strong></label><br />
-              <input
-                value={dietaryInput}
-                onChange={(e) => setDietaryInput(e.target.value)}
-              />
-            </div>
-
-            <div style={{ marginTop: "10px" }}>
-              <label><strong>Disliked Ingredients:</strong></label><br />
-              {dislikedList.map((item, idx) => (
-                <span key={idx} className="tag">
-                  {item}
-                  <button onClick={() => handleRemoveDislike(item)} style={{ marginLeft: 5 }}>x</button>
-                </span>
-              ))}
-
-              <div style={{ marginTop: 5 }}>
-                <input
-                  value={dislikedInput}
-                  onChange={(e) => setDislikedInput(e.target.value)}
-                  placeholder="Add ingredient"
-                />
-                <button onClick={handleAddDislike}>+ Add</button>
-              </div>
-            </div>
-
             <div style={{ marginTop: "10px" }}>
               <label><strong>Liked Ingredients:</strong></label><br />
-              {likedList.map((item, idx) => (
-                <span key={idx} className="tag">
-                  {item}
-                  <button onClick={() => handleRemoveLike(item)} style={{ marginLeft: 5 }}>x</button>
-                </span>
-              ))}
-
+              <div className="tag-list">
+                {likedList.map((item, i) => (
+                  <div key={i} className="tag" onClick={() => handleRemoveLiked(item)}>
+                    {item}
+                  </div>
+                ))}
+              </div>
               <div style={{ marginTop: 5 }}>
                 <input
                   value={likedInput}
                   onChange={(e) => setLikedInput(e.target.value)}
                   placeholder="Add ingredient"
+                  onKeyUp={(e) => {
+                    if (e.key === "Enter") handleAddLike();
+                  }}
                 />
                 <button onClick={handleAddLike}>+ Add</button>
               </div>
             </div>
 
+            <div style={{ marginTop: "10px" }}>
+              <label><strong>Disliked Ingredients:</strong></label><br />
+              <div className="tag-list disliked">
+                {dislikedList.map((item, i) => (
+                  <div key={i} className="tag" onClick={() => handleRemoveDisliked(item)}>
+                    {item}
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 5 }}>
+                <input
+                  value={dislikedInput}
+                  onChange={(e) => setDislikedInput(e.target.value)}
+                  placeholder="Add ingredient"
+                  onKeyUp={(e) => {
+                    if (e.key === "Enter") handleAddDislike();
+                  }}
+                />
+                <button onClick={handleAddDislike}>+ Add</button>
+              </div>
+            </div>
 
             <div style={{ marginTop: "10px" }}>
               <button onClick={handleSave} className="save-btn">Save</button>
@@ -148,9 +228,8 @@ function Profile() {
           </>
         ) : (
           <>
-            <p><strong>Dietary Preference:</strong> {preferences.dietary}</p>
-            <p><strong>Disliked Ingredients:</strong> {preferences.dislikedIngredients.join(", ")}</p>
-            <p><strong>Liked Ingredients:</strong> {preferences.likedIngredients.join(", ")}</p>
+            <p><strong>Liked Ingredients:</strong> {likedList.join(", ")}</p>
+            <p><strong>Disliked Ingredients:</strong> {dislikedList.join(", ")}</p>
             <button className="edit-button" onClick={() => setIsEditing(true)}>Edit Preferences</button>
           </>
         )}

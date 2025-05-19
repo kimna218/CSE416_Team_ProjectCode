@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { getAuth } from "firebase/auth";
 import "../css/RecipeDetails.css";
 
 interface Recipe {
@@ -29,31 +30,49 @@ const RecipeDetails: React.FC = () => {
     const [recipe, setRecipe] = useState<Recipe | null>(null);
     const [instructions, setInstructions] = useState<Step[]>([]);
     const [nutrition, setNutrition] = useState<Nutrition | null>(null);
+    
 
-    useEffect(() => {
-        const fetchRecipe = async () => {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${recipeName}`);
-            const data = await res.json();
-            setRecipe(data);
+useEffect(() => {
+  const fetchRecipe = async () => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${recipeName}`);
+    const data = await res.json();
+    setRecipe(data);
 
-            if (data?.id) {
-                // instructions
-                const stepRes = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${data.id}/steps`);
-                const stepData = await stepRes.json();
-                setInstructions(stepData);
+    if (data?.id) {
+      const stepRes = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${data.id}/steps`);
+      const stepData = await stepRes.json();
+      setInstructions(stepData);
 
-                // nutrition
-                const nutRes = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${data.id}/nutrition`);
-                const nutData = await nutRes.json();
-                setNutrition(nutData);
+      const nutRes = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${data.id}/nutrition`);
+      const nutData = await nutRes.json();
+      setNutrition(nutData);
+    }
 
-            } else {
-            console.warn("❗ recipe.id is missing or invalid:", data);
-            }
-        };
-        window.scrollTo(0, 0);
-        fetchRecipe();
-    }, [recipeName]);
+    // ✅ 즐겨찾기 여부 확인
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${currentUser.uid}`);
+        const data = await res.json();
+        const favorites = JSON.parse(data.user.favorite_recipes || "[]");
+
+        if (favorites.includes(recipeName)) {
+          setIsFavorited(true);
+        } else {
+          setIsFavorited(false);
+        }
+      } catch (err) {
+        console.error("Failed to fetch favorite_recipes:", err);
+      }
+    }
+  };
+
+  window.scrollTo(0, 0);
+  fetchRecipe();
+}, [recipeName]);
+
 
     const [rating, setRating] = useState(0);        
     const [hoverRating, setHoverRating] = useState(0); 
@@ -92,9 +111,27 @@ const RecipeDetails: React.FC = () => {
                     {recipeName}
                     <span
                     className={`heart-icon ${isFavorited ? "favorited" : ""}`}
-                    onClick={() => setIsFavorited(!isFavorited)}
+                    onClick={async () => {
+                        const auth = getAuth();
+                        const currentUser = auth.currentUser;
+
+                        if (!currentUser) {alert("로그인이 필요합니다.");return;}
+
+                        // 로그인 상태일 때 → 토글 + DB 업데이트
+                        setIsFavorited(!isFavorited);
+
+                        try {
+                        await fetch(`${import.meta.env.VITE_API_URL}/users/${currentUser.uid}/favorites`, {
+                            method: isFavorited ? "DELETE" : "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ recipeName }),
+                        });
+                        } catch (err) {
+                            console.error("즐겨찾기 업데이트 실패:", err);
+                        }
+                    }}
                     >
-                    {isFavorited ? "♥" : "♥"}
+                    {isFavorited ? "♥" : "♡"}
                     </span>
                 </h2>
 

@@ -88,6 +88,18 @@ await pool.query(`
   )
 `);
 
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    firebase_uid VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
+    nickname VARCHAR(50) NOT NULL,
+    liked_ingredients TEXT,
+    disliked_ingredients TEXT,
+    favorite_recipes TEXT
+  )
+`);
+
 
 const apiKey = process.env.FOOD_API_KEY;
 
@@ -144,17 +156,6 @@ const importRecipesFromOpenAPI = async () => {
             );
           }
 
-          // // recipe_ingredients insert
-          // const ingredients = extractIngredientsFromRecipe(recipe);
-          // for (const ing of ingredients) {
-          //   await pool.query(
-          //     `INSERT INTO recipe_ingredients (recipe_id, ingredient_name, quantity)
-          //     VALUES ($1, $2, $3)
-          //     ON CONFLICT DO NOTHING`,
-          //     [recipe_id, ing.ingredient_name, ing.quantity]
-          //   );
-          // }
-
           // recipe_steps insert
           const steps = extractStepsFromRecipe(recipe);
           for (const step of steps) {
@@ -188,32 +189,6 @@ const extractNutritionFromRecipe = (recipe) => {
     sodium: parseFloat(recipe.INFO_NA) || 0,
   };
 };
-
-// const extractIngredientsFromRecipe = (recipe) => {
-//   const raw = recipe.RCP_PARTS_DTLS;
-//   if (!raw) return [];
-
-//   const lines = raw.split('\n');
-//   const ingredients = [];
-
-//   for (const line of lines) {
-//     const items = line.split(',');
-//     for (let item of items) {
-//       item = item.trim();
-//       if (!item) continue;
-
-//       // 예: "연두부 75g(3/4모)"
-//       const match = item.match(/^([^\d\s,]+)\s*(.+)$/);
-//       if (match) {
-//         const name = match[1].trim();
-//         const quantity = match[2].trim();
-//         ingredients.push({ ingredient_name: name, quantity });
-//       }
-//     }
-//   }
-
-//   return ingredients;
-// };
 
 const extractStepsFromRecipe = (recipe) => {
   const steps = [];
@@ -359,6 +334,134 @@ app.post("/posts/:postId/comments", async (req, res) => {
 });
 
 
+/* * * * * * * * */
+/*     Users     */
+/* * * * * * * * */
+
+app.get("/users/:firebase_uid", async (req, res) => {
+  const { firebase_uid } = req.params;
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE firebase_uid = $1", [firebase_uid]);
+    if (result.rows.length > 0) {
+      res.json({ exists: true, user: result.rows[0] });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (err) {
+    console.error("Error checking user:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/users/register", async (req, res) => {
+  const {firebase_uid,email,nickname,liked_ingredients,disliked_ingredients} = req.body;
+
+  const liked = JSON.stringify(liked_ingredients);
+  const disliked = JSON.stringify(disliked_ingredients);
+  const favorite = JSON.stringify([]); 
+
+  try {
+    await pool.query(
+      `INSERT INTO users (firebase_uid,email,nickname,liked_ingredients,disliked_ingredients,favorite_recipes
+      ) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [firebase_uid, email, nickname, liked, disliked, favorite]
+    );
+
+    res.status(201).json({ message: "User registered" });
+  } catch (err) {
+    console.error("Error registering user:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/users", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM users");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.put("/users/:firebase_uid", async (req, res) => {
+  const { firebase_uid } = req.params;
+  const { liked_ingredients, disliked_ingredients } = req.body;
+
+  try {
+    await pool.query(
+      `UPDATE users
+       SET liked_ingredients = $1,
+           disliked_ingredients = $2
+       WHERE firebase_uid = $3`,
+      [JSON.stringify(liked_ingredients), JSON.stringify(disliked_ingredients), firebase_uid]
+    );
+
+    res.status(200).json({ message: "Preferences updated" });
+  } catch (err) {
+    console.error("Error updating preferences:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// 즐겨찾기 추가
+app.post("/users/:firebase_uid/favorites", async (req, res) => {
+  const { firebase_uid } = req.params;
+  const { recipeName } = req.body;
+
+  try {
+    const result = await pool.query(
+      "SELECT favorite_recipes FROM users WHERE firebase_uid = $1",
+      [firebase_uid]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const favorites = JSON.parse(result.rows[0].favorite_recipes || "[]");
+    if (!favorites.includes(recipeName)) {
+      favorites.push(recipeName);
+    }
+
+    await pool.query(
+      "UPDATE users SET favorite_recipes = $1 WHERE firebase_uid = $2",
+      [JSON.stringify(favorites), firebase_uid]
+    );
+    res.status(200).json({ message: "Recipe added to favorites" });
+  } catch (err) {
+    console.error("Error adding favorite:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// 즐겨찾기 제거
+app.delete("/users/:firebase_uid/favorites", async (req, res) => {
+  const { firebase_uid } = req.params;
+  const { recipeName } = req.body;
+
+  try {
+    const result = await pool.query(
+      "SELECT favorite_recipes FROM users WHERE firebase_uid = $1",
+      [firebase_uid]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    let favorites = JSON.parse(result.rows[0].favorite_recipes || "[]");
+    favorites = favorites.filter((name) => name !== recipeName);
+
+    await pool.query(
+      "UPDATE users SET favorite_recipes = $1 WHERE firebase_uid = $2",
+      [JSON.stringify(favorites), firebase_uid]
+    );
+    res.status(200).json({ message: "Recipe removed from favorites" });
+  } catch (err) {
+    console.error("Error removing favorite:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // 서버 시작
 const PORT = process.env.PORT || 5001;
