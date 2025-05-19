@@ -168,14 +168,14 @@ const Feed: React.FC = () => {
     const imageUrl = await uploadImageToCloudinary(uploadFile);
     if (!imageUrl) return;
 
-    const nickname = await fetchNickname(); // ✅ 닉네임 가져오기
+    const nickname = await fetchNickname();
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: nickname, // ⬅️ 가져온 닉네임 사용
+          username: nickname, 
           caption: newPostCaption,
           image_url: imageUrl,
         }),
