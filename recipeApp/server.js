@@ -693,8 +693,8 @@ app.get("/recommend-recipes", async (req, res) => {
   const user = await getUserByUID(uid); // DB에서 liked/disliked_ingredients 가져오는 함수
   if (!user) return res.status(404).json({ error: "User not found" });
 
-  const liked = user.liked_ingredients || [];
-  const disliked = user.disliked_ingredients || [];
+const liked = JSON.parse(user.liked_ingredients || "[]");
+const disliked = JSON.parse(user.disliked_ingredients || "[]");
 
   const prompt = `
 You are a recipe recommender.
