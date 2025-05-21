@@ -55,7 +55,7 @@ cd CSE416_ProjectCode
 
 - Please contact us to get the env files required.
 
-### 4. 🚀 Run the Application Locally
+### 3. 🚀 Run the Application Locally
 
 ```bash
 # Backend
@@ -86,8 +86,6 @@ Please test the following:
 - **Delete or like feed posts**
 - **Responsiveness** on mobile and desktop
 
-> All features marked as completed have been verified by another team member. Any bugs found are documented below.
-
 ---
 
 ## 📚 API Documentation
@@ -98,7 +96,7 @@ All API routes, parameters, and examples are documented in [https://github.com/j
 
 ## 🐞 Bug Tracking & Reporting
 
-We are using ****GitHub Issues** to manage and track bugs.
+We are using **GitHub Issues** to manage and track bugs.
 
 ### 🔎 How to Check Existing Bugs
 
@@ -119,7 +117,7 @@ We are using ****GitHub Issues** to manage and track bugs.
 
 - All serious bugs are assigned to specific developers.
 - Fixes are tracked with `bug` and `in-progress` labels.
-- Bug fix efforts are scheduled in the final sprint.**
+- Bug fix efforts are scheduled in the final sprint.
 
 ---
 
