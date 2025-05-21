@@ -20,9 +20,9 @@ Our website allows users to input ingredients they currently have and receive pe
 ## ✨ Key Features
 
 - Recipe Search by Name and Ingredients
-- Ingredient-Based Smart Filtering System 
+- Ingredient-Based Smart Filtering System
 - Personalized AI Recipe Recommendations
-- Step-by-Step Cooking Instructions 
+- Step-by-Step Cooking Instructions
 - Google OAuth Secure Login
 - Favorite Recipes & Personalized Profile Page
 - User Ratings, Likes, Dislikes, and Feedback Submission
@@ -35,7 +35,7 @@ Our website allows users to input ingredients they currently have and receive pe
 
 ## 🚀 Deployment Links
 
-- **Frontend (Render):** [https://recipes-416.onrender.com](https://recipes-416.onrender.com)  
+- **Frontend (Render):** [https://recipes-416.onrender.com](https://recipes-416.onrender.com)
 - **Backend API (Render):** Hosted on Render – please allow up to 50 seconds for cold start
 
 ---
@@ -53,7 +53,19 @@ cd CSE416_ProjectCode
 
 ### 2. 🗂️ Configure Environment Variables
 
-- Please contact us to get the env files required.
+- Please contact us to get the env files required(For render).
+- If you want to test it on your local environments, please follow the steps:
+
+Create a local PostgreSQL database with the following name and Update your .env file with the following configuration:
+
+```bash
+VITE_API_URL=http://localhost:5001
+DB_USER=postgres
+DB_PASSWORD=12345678
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_NAME=local_recipes_postgresql
+```
 
 ### 3. 🚀 Run the Application Locally
 
