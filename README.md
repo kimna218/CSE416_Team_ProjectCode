@@ -1,109 +1,132 @@
 # CSE416_ProjectCode
 
-## Smart AI-Recipes
+## AI Powered Recipe Recommendation Website
 
-### Team members:
+### Team Members
 
-Hyomin Kim(114744241), Nahyun Kim(115242403)
+- Hyomin Kim
+- Nahyun Kim
 
-### Problem Statement:
+---
 
-Many people who live alone often want to cook but struggle with menu choices, a lack of ingredients, and insufficient recipes. Due to this reason, they rely on expensive and unhealthy delivery food.
+## 🔍 Problem Statement (Updated)
 
-To address this issue, we are developing an AI web application that provides recipes and suggests meals based on the ingredients currently available in the user's fridge. Users can input their available ingredients, and the AI will analyze recipes to recommend suitable recipes. The provided recipes include step-by-step instructions and cooking times, making them easy to follow for anyone.
+Many individuals, especially those living alone, often struggle with choosing meals due to limited ingredients or lack of ideas. This results in frequent reliance on costly and unhealthy delivery food. Our goal is to provide a smarter alternative through an AI-powered web application.
 
-### Key Features:
+Our website allows users to input ingredients they currently have and receive personalized recipe suggestions. In addition to search and filtering options, our platform incorporates AI recommendation, user reviews, and social interaction through a feed system to create a more engaging and helpful cooking experience.
 
-**_Recipe Search:_** Users input a dish, and the system provides matching recipes.  
-**_Ingredient-Based Recipe Search:_** Users input the ingredients they have, and the system suggests suitable recipes.  
-**_Smart Recipe Filtering:_** The platform prioritizes recipes that match the available ingredients as closely as possible.  
-**_Step-by-Step Cooking Instructions:_** Each recipe comes with easy-to-follow instructions.  
-**_User Account:_** Users can save the recipe when they like it.  
-**_Admin Roles:_** Admin add or manage the content.  
-**_Secure Login:_** Use the Google OAuth for user authentication.  
-**_User-Friendly Interface:_** Simple and intuitive UI to enhance user experience.
+---
 
-### Project Goals:
+## ✨ Key Features
 
-Create a web application with a user-friendly interface.
-Implement AI features to provide recipes to the users.
-Ensure security and scalability for a better user experience.
-Make an online platform for public access.
+- Recipe Search by Name and Ingredients
+- Ingredient-Based Smart Filtering System 
+- Personalized AI Recipe Recommendations
+- Step-by-Step Cooking Instructions 
+- Google OAuth Secure Login
+- Favorite Recipes & Personalized Profile Page
+- User Ratings, Likes, Dislikes, and Feedback Submission
+- Public Recipe Upload Feature
+- User Feed System with Food Posts, Likes, and Comments
+- Fully Responsive UI/UX across Devices
+- Deployed Frontend, Backend, and Database on Render
 
-### Trello:
+---
 
-https://trello.com/b/1B4X590E/cse416ai-powered-recipes
+## 🚀 Deployment Links
 
-### Project Setup Instructions (for New Developers)
+- **Frontend (Render):** [https://recipes-416.onrender.com](https://recipes-416.onrender.com)  
+- **Backend API (Render):** Hosted on Render – please allow up to 50 seconds for cold start
 
-This project is currently running on a local development environment. The instructions below will help you get started with checking out the source code, building the software, and testing it locally.
+---
 
-#### 1. 🔨 Clone the Repository
+## 🛠️ Project Setup Instructions (for New Developers)
 
-https://github.com/jellyrgb/CSE416_ProjectCode.git
-or
-Open with the GitHub Desktop
+> The following steps have been verified to work on macOS, Windows 10+, and Ubuntu Linux. Please ensure you have Node.js (v18+), PostgreSQL (v8+), and npm installed.
 
-#### 2. 🔨 Install Dependencies
+### 1. 🔽 Clone the Repository
 
-- For React
-  cd src
-  npm install
+```bash
+git clone https://github.com/jellyrgb/CSE416_ProjectCode.git
+cd CSE416_ProjectCode
+```
 
-- For backend
-  cd server
-  npm install
+### 2. 🗂️ Configure Environment Variables
 
-#### 3. 🛠️ Set Up and Run the Local Environment
+- Please contact us to get the env files required.
 
-- Make sure to change .env file located in /src and /src/server path to your local information
-- Make sure MySQL is running
-- Create a new database if you are the first time to run this
-  sql> CREATE DATABASE recipe_db;
+### 4. 🚀 Run the Application Locally
 
-- Run the Backend Server
-  cd src/server
-  node server.js
+```bash
+# Backend
+cd recipeApp
+node server.js
 
-- Run frontend
-  cd src
-  npm run dev
+# Frontend
+cd recipeApp
+npm run dev
+```
 
-#### 4. 🔖 Testing the System:
+Visit `http://localhost:5173` in your browser.
 
-Recipes:
+---
 
-- Categorized by 'Rice', 'One Dish Meal', 'Soup', 'Dessert', 'Side Dish'
-- Checking nutrition data in the details page
-- Able to see the image of each meal
-- Sorted by nutritions
+## 🧪 Testing Instructions
 
-Searching:
+Please test the following:
 
-- Searching recipes by name
+- **Recipe search** (by name or ingredients)
+- **Filtering by category** (Rice, Soup, Dessert, etc.)
+- **View recipe details** with nutrition info and images
+- **Favorite a recipe** using the heart icon
+- **Post to the feed** and check integration with user account
+- **Rate or provide feedback** on recipes
+- **Login using Google OAuth**
+- **Upload your own recipes** and view them on your profile
+- **Delete or like feed posts**
+- **Responsiveness** on mobile and desktop
 
-User communication:
+> All features marked as completed have been verified by another team member. Any bugs found are documented below.
 
-- Rating and feedback on recipes(only display)
+---
 
-### 🐞 Bug Tracking & Reporting
+## 📚 API Documentation
 
-We are using **GitHub Issues** to track bugs in this project.
+All API routes, parameters, and examples are documented in [https://github.com/jellyrgb/CSE416_ProjectCode/wiki](https://github.com/jellyrgb/CSE416_ProjectCode/wiki)
 
-#### How to check existing bugs
+---
 
-1. Go to our GitHub repository
-2. Click on the `Issues` tab
-3. Filter by the label `bug` to see all known issues
+## 🐞 Bug Tracking & Reporting
 
-#### How to report a new bug
+We are using ****GitHub Issues** to manage and track bugs.
 
-1. Go to `Issues` > `New Issue`
-2. Choose the `Bug report` template (if available)
-3. Include:
-   - Steps to reproduce the bug
-   - Expected vs actual behavior
-   - Screenshot or error log (if possible)
-   - Your environment (browser/OS)
+### 🔎 How to Check Existing Bugs
 
-Test auto deploy
+1. Visit: [GitHub Repository Issues](https://github.com/jellyrgb/CSE416_ProjectCode/issues)
+2. Filter by label: `bug`
+
+### 📝 How to Report a New Bug
+
+1. Go to Issues > New Issue
+2. Choose the `Bug report` template
+3. Fill in:
+   - Clear steps to reproduce
+   - Expected vs actual outcome
+   - Screenshots or logs (if possible)
+   - Your system/browser info
+
+### ✅ Verified Fixes & Bug Assignments
+
+- All serious bugs are assigned to specific developers.
+- Fixes are tracked with `bug` and `in-progress` labels.
+- Bug fix efforts are scheduled in the final sprint.**
+
+---
+
+## 🗓️ Development Schedule
+
+Trello Board: [https://trello.com/b/1B4X590E/cse416ai-powered-recipes](https://trello.com/b/1B4X590E/cse416ai-powered-recipes)
+
+- Completed features are clearly marked ✅
+- Adjustments to timeline (e.g. added recipe upload, removed voice input) are labeled
+- Remaining UI polish and testing will be finalized in the final release sprint
