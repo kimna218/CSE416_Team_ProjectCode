@@ -7,15 +7,11 @@
 - Hyomin Kim
 - Nahyun Kim
 
----
-
 ## 🔍 Problem Statement (Updated)
 
 Many individuals, especially those living alone, often struggle with choosing meals due to limited ingredients or lack of ideas. This results in frequent reliance on costly and unhealthy delivery food. Our goal is to provide a smarter alternative through an AI-powered web application.
 
 Our website allows users to input ingredients they currently have and receive personalized recipe suggestions. In addition to search and filtering options, our platform incorporates AI recommendation, user reviews, and social interaction through a feed system to create a more engaging and helpful cooking experience.
-
----
 
 ## ✨ Key Features
 
@@ -31,14 +27,10 @@ Our website allows users to input ingredients they currently have and receive pe
 - Fully Responsive UI/UX across Devices
 - Deployed Frontend, Backend, and Database on Render
 
----
-
 ## 🚀 Deployment Links
 
 - **Frontend (Render):** [https://recipes-416.onrender.com](https://recipes-416.onrender.com)
 - **Backend API (Render):** Hosted on Render – please allow up to 50 seconds for cold start
-
----
 
 ## 🛠️ Project Setup Instructions (for New Developers)
 
@@ -81,8 +73,6 @@ npm run dev
 
 Visit `http://localhost:5173` in your browser.
 
----
-
 ## 🧪 Testing Instructions
 
 Please test the following:
@@ -98,13 +88,9 @@ Please test the following:
 - **Delete or like feed posts**
 - **Responsiveness** on mobile and desktop
 
----
-
 ## 📚 API Documentation
 
 All API routes, parameters, and examples are documented in [https://github.com/jellyrgb/CSE416_ProjectCode/wiki](https://github.com/jellyrgb/CSE416_ProjectCode/wiki)
-
----
 
 ## 🐞 Bug Tracking & Reporting
 
@@ -130,8 +116,6 @@ We are using **GitHub Issues** to manage and track bugs.
 - All serious bugs are assigned to specific developers.
 - Fixes are tracked with `bug` and `in-progress` labels.
 - Bug fix efforts are scheduled in the final sprint.
-
----
 
 ## 🗓️ Development Schedule
 
