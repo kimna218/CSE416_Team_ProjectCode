@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams,useNavigate } from "react-router-dom";
 import "../css/RecipeList.css";
+import { getCurrentLang } from "../components/language";
 
 interface Recipe {
   id: number;
   name: string;
+  en_name: string;
   category: string;
   image_url: string;
 }
@@ -14,6 +16,7 @@ const RecipeList: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const lang = getCurrentLang();
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -60,7 +63,7 @@ const RecipeList: React.FC = () => {
           {categoryRecipes.map((recipe) => (
             <div key={recipe.id} className="list-recipe-card" onClick={() => handleClick(recipe)}>
               <img src={recipe.image_url} alt={recipe.name} className="list-recipe-image" />
-              <p className="list-recipe-name">{recipe.name}</p>
+              <p className="list-recipe-name">{lang === "en" ? recipe.en_name || recipe.name : recipe.name}</p>
             </div>
           ))}
         </div>

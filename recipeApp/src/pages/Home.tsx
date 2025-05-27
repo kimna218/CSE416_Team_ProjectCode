@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/Home.css";
 import { getAuth } from "firebase/auth";
+import { getCurrentLang } from "../components/language";
 
 interface Recipe {
   id: number;
   name: string;
+  en_name: string;
   image_url: string;
   category: string;
   likes: number;
@@ -23,6 +25,7 @@ interface FullRecipe extends Recipe, Nutrition {}
 
 function Home() {
   const navigate = useNavigate();
+  const lang = getCurrentLang();
   const [recipes, setRecipes] = useState<FullRecipe[]>([]);
   const [popularRecipes, setPopularRecipes] = useState<Recipe[]>([]);
   const [sortKey, setSortKey] = useState<string>("protein");
@@ -156,7 +159,7 @@ function Home() {
                   alt={recipe.name}
                   className="rec-recipe-image"
                 />
-                <p className="rec-recipe-name">{recipe.name}</p>
+                <p className="home-recipe-name">{lang === "en" ? recipe.en_name || recipe.name : recipe.name}</p>
                 <p className="rec-reason">{recipe.reason}</p>
               </div>
             ))
@@ -180,7 +183,7 @@ function Home() {
                 alt={recipe.name}
                 className="popular-recipe-image"
               />
-              <p className="home-recipe-name">{recipe.name}</p>
+              <p className="home-recipe-name">{lang == "en" ? recipe.en_name || recipe.name : recipe.name}</p>
               <p className="home-recipe-likes">❤️ {recipe.likes} Likes</p>
             </div>
           ))}
@@ -217,8 +220,8 @@ function Home() {
               alt={recipe.name}
               className="home-recipe-image"
             />
-            <p className="home-recipe-name">{recipe.name}</p>
-            <p className="nutrition-info">
+              <p className="home-recipe-name">{lang == "en" ? recipe.en_name || recipe.name : recipe.name}</p>
+              <p className="nutrition-info">
               {`Protein: ${recipe.protein.toFixed(
                 1
               )}g | Carbs: ${recipe.carbohydrates.toFixed(

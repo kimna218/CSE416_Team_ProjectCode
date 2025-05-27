@@ -2,13 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import "../css/RecipeDetails.css";
+import { getCurrentLang } from "../components/language";
 
 interface Recipe {
   id: number;
   name: string;
+  en_name: string;
   category: string;
   image_url: string;
   ingredients: string;
+  en_ingredients:string;
 }
 
 interface Step {
@@ -40,6 +43,8 @@ const RecipeDetails: React.FC = () => {
   >([]);
   const [isEditingFeedback, setIsEditingFeedback] = useState(false);
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
+
+  const lang = getCurrentLang();
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -144,7 +149,7 @@ const RecipeDetails: React.FC = () => {
     <div className="recipe-detail-page">
       <div className="recipe-title-box">
         <h2 className="recipe-title">
-          {recipeName}
+        {lang === "en" ? recipe?.en_name || recipe?.name : recipe?.name}
           <span
             className={`heart-icon ${isFavorited ? "favorited" : ""}`}
             onClick={async () => {
@@ -200,11 +205,17 @@ const RecipeDetails: React.FC = () => {
         </div>
         <div className="tab-content">
           {activeTab === "ingredients" ? (
-            <div style={{ whiteSpace: "pre-wrap" }}>{recipe?.ingredients}</div>
+            <div style={{ whiteSpace: "pre-wrap" }}>
+              {lang === "en" ? recipe?.en_ingredients || recipe?.ingredients : recipe?.ingredients}
+            </div>
           ) : (
-            <ul>{instructions.map((step) => (
-              <li key={step.step_number}><strong>Step {step.step_number}:</strong> {step.description}</li>
-            ))}</ul>
+            <ul>
+              {instructions.map((step) => (
+                <li key={step.step_number}>
+                  <strong>Step {step.step_number}:</strong> {step.description}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </div>
