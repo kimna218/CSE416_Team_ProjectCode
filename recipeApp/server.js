@@ -21,9 +21,9 @@ for (const key of Object.keys(process.env)) {
   }
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -41,9 +41,11 @@ await pool.query(`
   CREATE TABLE IF NOT EXISTS recipes (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL,
+    en_name VARCHAR(255),
     category VARCHAR(50),
     image_url VARCHAR(255),
     ingredients TEXT,
+    en_ingredients TEXT,
     likes INTEGER DEFAULT 0
   )
 `);
@@ -132,7 +134,7 @@ const apiKey = process.env.FOOD_API_KEY;
 const importRecipesFromOpenAPI = async () => {
   try {
     const res = await fetch(
-      `https://openapi.foodsafetykorea.go.kr/api/${apiKey}/COOKRCP01/json/1/1000`
+      `https://openapi.foodsafetykorea.go.kr/api/${apiKey}/COOKRCP01/json/1/1`
     );
     const data = await res.json();
     const rows = data.COOKRCP01?.row || [];
@@ -146,12 +148,16 @@ const importRecipesFromOpenAPI = async () => {
         try {
           const ingredientsText = recipe.RCP_PARTS_DTLS;
 
+          // ✨ DeepL API로 영어 번역
+          const en_name = await translateText(name);
+          const en_ingredients = await translateText(ingredientsText);
+
           const insertResult = await pool.query(
-            `INSERT INTO recipes (name, category, image_url, ingredients)
-            VALUES ($1, $2, $3, $4)
+            `INSERT INTO recipes (name, en_name, category, image_url, ingredients, en_ingredients)
+            VALUES ($1, $2, $3, $4, $5, $6)
             ON CONFLICT (name) DO NOTHING
             RETURNING id`,
-            [name, category, image_url, ingredientsText]
+            [name, en_name, category, image_url, ingredientsText, en_ingredients]
           );
 
           let recipe_id = insertResult.rows[0]?.id;
@@ -231,18 +237,35 @@ const extractStepsFromRecipe = (recipe) => {
   return steps;
 };
 
-export async function getUserByUID(uid) {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM users WHERE firebase_uid = $1",
-      [uid]
-    );
-    return result.rows[0];
-  } catch (err) {
-    console.error("Error fetching user by UID:", err);
-    return null;
-  }
+export async function translateText(text, targetLang = "EN") {
+  const res = await fetch("https://api-free.deepl.com/v2/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      auth_key: process.env.DEEPL_API_KEY, // .env에서 불러오기
+      text,
+      source_lang: "KO",
+      target_lang: targetLang
+    }),
+  });
+
+  const json = await res.json();
+  return json.translations?.[0]?.text || "";
 }
+
+
+// export async function getUserByUID(uid) {
+//   try {
+//     const result = await pool.query(
+//       "SELECT * FROM users WHERE firebase_uid = $1",
+//       [uid]
+//     );
+//     return result.rows[0];
+//   } catch (err) {
+//     console.error("Error fetching user by UID:", err);
+//     return null;
+//   }
+// }
 
 // API Routers
 app.get("/recipes", async (req, res) => {
@@ -318,7 +341,7 @@ app.get("/recipes/detail/:id/steps", async (req, res) => {
 app.get("/recipes/popular", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, name, image_url, category, likes
+      SELECT id, name, en_name, image_url, category, likes
       FROM recipes
       ORDER BY likes DESC
       LIMIT 4
@@ -329,6 +352,7 @@ app.get("/recipes/popular", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch popular recipes" });
   }
 });
+
 
 /* * * * * * * * */
 /*     Post      */
@@ -841,8 +865,17 @@ app.get("/admin/reset-feed", async (req, res) => {
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, async () => {
   try {
-    await importRecipesFromOpenAPI();
+    // ✅ 레시피가 이미 저장돼 있는지 확인
+    const alreadyInserted = await pool.query(`SELECT COUNT(*) FROM recipes`);
+    if (parseInt(alreadyInserted.rows[0].count) > 0) {
+      console.log("✔️ Recipes already imported. Skipping import.");
+    } else {
+      console.log("🚀 First-time recipe import...");
+      await importRecipesFromOpenAPI();
+    }
+
+    console.log(`✅ Server listening on port ${PORT}`);
   } catch (err) {
-    console.error("Cannot start server:", err);
+    console.error("❌ Cannot start server:", err);
   }
 });

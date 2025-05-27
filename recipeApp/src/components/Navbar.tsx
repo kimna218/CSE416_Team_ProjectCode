@@ -5,6 +5,7 @@ import { Container, Nav, Navbar, Button, Form } from 'react-bootstrap';
 import { FaSearch, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { setCurrentLang } from '../components/language';
 
 const AppNavbar: React.FC = () => {
   const navigate = useNavigate();
@@ -16,17 +17,24 @@ const AppNavbar: React.FC = () => {
       if (user && user.photoURL) {
         setUserPhoto(user.photoURL);
       } else {
-        setUserPhoto(null); // 로그아웃 시 초기화
+        setUserPhoto(null); 
       }
     });
 
-    return () => unsubscribe(); // cleanup
+    return () => unsubscribe(); 
   }, []);
 
   return (
     <Navbar bg="light" expand="lg" className="custom-navbar shadow-sm py-3">
       <Container className="d-grid navbar-grid">
         <div className="navbar-left">
+          <Button variant="link" onClick={() => setCurrentLang("ko")} className="me-2">
+              🇰🇷
+          </Button>
+          <Button variant="link" onClick={() => setCurrentLang("en")}>
+              🇺🇸
+          </Button>
+          
           <Navbar.Brand onClick={() => navigate('/')} className="navbar-logo">
             <img src="/images/logo.png" alt="Logo" />
           </Navbar.Brand>
