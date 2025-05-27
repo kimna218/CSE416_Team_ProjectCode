@@ -134,7 +134,7 @@ const apiKey = process.env.FOOD_API_KEY;
 const importRecipesFromOpenAPI = async () => {
   try {
     const res = await fetch(
-      `https://openapi.foodsafetykorea.go.kr/api/${apiKey}/COOKRCP01/json/1/1`
+      `https://openapi.foodsafetykorea.go.kr/api/${apiKey}/COOKRCP01/json/1/1000`
     );
     const data = await res.json();
     const rows = data.COOKRCP01?.row || [];
