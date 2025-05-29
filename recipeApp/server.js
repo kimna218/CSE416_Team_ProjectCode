@@ -869,7 +869,18 @@ app.get("/admin/reset-feed", async (req, res) => {
 
 
 // 정적 파일 서빙해서 새로고침해도 괜찮게 하기
-app.get('*', (req, res) => {
+app.get('*', (req, res, next) => {
+  // API 요청이면 다음 미들웨어로
+  if (req.path.startsWith('/api') || req.path.startsWith('/recipes') || req.path.startsWith('/posts') || req.path.startsWith('/users')) {
+    return next();
+  }
+
+  // 파일 요청이면 다음으로
+  if (req.path.includes('.')) {
+    return next();
+  }
+
+  // 그렇지 않으면 React 앱으로 라우팅
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
