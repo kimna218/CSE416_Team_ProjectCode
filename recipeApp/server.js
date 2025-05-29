@@ -861,6 +861,21 @@ app.get("/admin/reset-feed", async (req, res) => {
   }
 });
 
+
+// 정적 파일 서빙해서 새로고침해도 괜찮게 하기
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+
 // 서버 시작
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, async () => {
@@ -878,17 +893,4 @@ app.listen(PORT, async () => {
   } catch (err) {
     console.error("❌ Cannot start server:", err);
   }
-});
-
-// 정적 파일 서빙해서 새로고침해도 괜찮게 하기
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-app.use(express.static(path.join(__dirname, 'dist')));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
