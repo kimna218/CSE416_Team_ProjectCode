@@ -3,12 +3,7 @@ import cors from "cors";
 import fetch from "node-fetch";
 import pkg from "pg";
 import dotenv from "dotenv";
-import path from 'path';
-import { fileURLToPath } from 'url';
 import OpenAI from "openai";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -17,7 +12,6 @@ const { Pool } = pkg;
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'dist')));
 
 console.log("Starting server...");
 console.log("✅ FULL ENV DUMP:");
@@ -865,23 +859,6 @@ app.get("/admin/reset-feed", async (req, res) => {
     console.error("Feed reset error:", err);
     res.status(500).json({ error: "Failed to reset feed" });
   }
-});
-
-
-// 정적 파일 서빙해서 새로고침해도 괜찮게 하기
-app.get('*', (req, res, next) => {
-  // API 요청이면 다음 미들웨어로
-  if (req.path.startsWith('/api') || req.path.startsWith('/recipes') || req.path.startsWith('/posts') || req.path.startsWith('/users')) {
-    return next();
-  }
-
-  // 파일 요청이면 다음으로
-  if (req.path.includes('.')) {
-    return next();
-  }
-
-  // 그렇지 않으면 React 앱으로 라우팅
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 
