@@ -13,7 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-console.log("Starting server...");
+console.log("➡️ Starting server...");
 console.log("✅ FULL ENV DUMP:");
 for (const key of Object.keys(process.env)) {
   if (key.toLowerCase().includes("db") || key.toLowerCase().includes("pg")) {
@@ -33,10 +33,12 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-console.log("Success to connect");
+console.log("➡️ Success to connect!");
 
 // CREATE TABLES
-// Recipe Page
+/* * * * * * * * */
+/*  Recipe Page  */
+/* * * * * * * * */
 await pool.query(`
   CREATE TABLE IF NOT EXISTS recipes (
     id SERIAL PRIMARY KEY,
@@ -61,6 +63,7 @@ await pool.query(`
     PRIMARY KEY (recipe_id)
   )
 `);
+
 await pool.query(`
   CREATE TABLE IF NOT EXISTS recipe_steps (
     recipe_id INT REFERENCES recipes (id),
@@ -70,7 +73,9 @@ await pool.query(`
   )
 `);
 
-// Feed Page
+/* * * * * * * * */
+/*   Feed Page   */
+/* * * * * * * * */
 await pool.query(`
   CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
@@ -99,7 +104,9 @@ await pool.query(`
 );
 `);
 
-// User Page
+/* * * * * * * * */
+/*   User Page   */
+/* * * * * * * * */
 await pool.query(`
   CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -204,7 +211,7 @@ const importRecipesFromOpenAPI = async () => {
       }
     }
 
-    console.log("Complete storing details from OpenAPI");
+    console.log("➡️ Complete storing details from OpenAPI");
   } catch (err) {
     console.error("OpenAPI fetch error:", err);
   }
@@ -242,7 +249,7 @@ export async function translateText(text, targetLang = "EN") {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      auth_key: process.env.DEEPL_API_KEY, // .env에서 불러오기
+      auth_key: process.env.DEEPL_API_KEY,
       text,
       source_lang: "KO",
       target_lang: targetLang
@@ -253,21 +260,25 @@ export async function translateText(text, targetLang = "EN") {
   return json.translations?.[0]?.text || "";
 }
 
+/**
+export async function getUserByUID(uid) {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM users WHERE firebase_uid = $1",
+      [uid]
+    );
+    return result.rows[0];
+  } catch (err) {
+    console.error("Error fetching user by UID:", err);
+    return null;
+  }
+}
+ */
 
-// export async function getUserByUID(uid) {
-//   try {
-//     const result = await pool.query(
-//       "SELECT * FROM users WHERE firebase_uid = $1",
-//       [uid]
-//     );
-//     return result.rows[0];
-//   } catch (err) {
-//     console.error("Error fetching user by UID:", err);
-//     return null;
-//   }
-// }
-
-// API Routers
+// API ROUTERS
+/* * * * * * * * */
+/*    Recipe     */
+/* * * * * * * * */
 app.get("/recipes", async (req, res) => {
   const result = await pool.query("SELECT * FROM recipes");
   res.json(result.rows);
@@ -337,7 +348,7 @@ app.get("/recipes/detail/:id/steps", async (req, res) => {
   }
 });
 
-// 인기 레시피 4개 조회 (likes 기준)
+// Fetch top 4 popular recipes
 app.get("/recipes/popular", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -352,7 +363,6 @@ app.get("/recipes/popular", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch popular recipes" });
   }
 });
-
 
 /* * * * * * * * */
 /*     Post      */
@@ -413,7 +423,7 @@ app.post("/posts/:postId/like", async (req, res) => {
   }
 });
 
-// All posts with like counts
+// Get total likes for each post
 app.get("/posts/likes", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -490,7 +500,7 @@ app.post("/posts/:postId/like", async (req, res) => {
 /* * * * * * * * */
 /*     Users     */
 /* * * * * * * * */
-//이미 signUp 했는지, get user's info
+// Check if user signed up
 app.get("/users/:firebase_uid", async (req, res) => {
   const { firebase_uid } = req.params;
   try {
@@ -509,7 +519,7 @@ app.get("/users/:firebase_uid", async (req, res) => {
   }
 });
 
-// post user's info
+// Post user's info
 app.post("/users/register", async (req, res) => {
   const {
     firebase_uid,
@@ -537,7 +547,7 @@ app.post("/users/register", async (req, res) => {
   }
 });
 
-//see all users
+// See all users
 app.get("/users", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM users");
@@ -548,7 +558,7 @@ app.get("/users", async (req, res) => {
   }
 });
 
-//update user's preferences
+// Update user's preferences
 app.put("/users/:firebase_uid", async (req, res) => {
   const { firebase_uid } = req.params;
   const { liked_ingredients, disliked_ingredients } = req.body;
@@ -573,7 +583,7 @@ app.put("/users/:firebase_uid", async (req, res) => {
   }
 });
 
-// 즐겨찾기 추가
+// Add favorite recipe
 app.post("/users/:firebase_uid/favorites", async (req, res) => {
   const { firebase_uid } = req.params;
   const { recipeName } = req.body;
@@ -608,7 +618,7 @@ app.post("/users/:firebase_uid/favorites", async (req, res) => {
   }
 });
 
-// 즐겨찾기 제거
+// Remove favorite recipe
 app.delete("/users/:firebase_uid/favorites", async (req, res) => {
   const { firebase_uid } = req.params;
   const { recipeName } = req.body;
@@ -646,9 +656,9 @@ app.delete("/users/:firebase_uid/favorites", async (req, res) => {
   }
 });
 
-/* * * * * * * * * * */
-/*     Feedback      */
-/* * * * * * * * * * */
+/* * * * * * * * */
+/*   Feedback    */
+/* * * * * * * * */
 // 별점 및 피드백 저장 (INSERT or UPDATE)
 app.post("/recipes/:recipeId/rate", async (req, res) => {
   const { recipeId } = req.params;
@@ -804,6 +814,7 @@ app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
 //   }
 // });
 
+// Simple recommender based on liked/disliked ingredients
 app.get("/recommend-recipes", async (req, res) => {
   const uid = req.query.uid;
   if (!uid) return res.status(400).json({ error: "Missing UID" });
@@ -862,14 +873,14 @@ app.get("/admin/reset-feed", async (req, res) => {
 });
 
 
-// 서버 시작
+// Start the server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, async () => {
   try {
-    // ✅ 레시피가 이미 저장돼 있는지 확인
+    // 레시피가 이미 저장돼 있는지 확인
     const alreadyInserted = await pool.query(`SELECT COUNT(*) FROM recipes`);
     if (parseInt(alreadyInserted.rows[0].count) > 0) {
-      console.log("✔️ Recipes already imported. Skipping import.");
+      console.log("📕 Recipes already imported. Skipping import.");
     } else {
       console.log("🚀 First-time recipe import...");
       await importRecipesFromOpenAPI();
