@@ -156,7 +156,10 @@ const importRecipesFromOpenAPI = async () => {
           const ingredientsText = recipe.RCP_PARTS_DTLS;
 
           // ✨ DeepL API로 영어 번역
+          await sleep(1000);
+
           const en_name = await translateText(name);
+          await sleep(1000); // 또 1초 대기
           const en_ingredients = await translateText(ingredientsText);
 
           const insertResult = await pool.query(
@@ -216,6 +219,8 @@ const importRecipesFromOpenAPI = async () => {
     console.error("OpenAPI fetch error:", err);
   }
 };
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const extractNutritionFromRecipe = (recipe) => {
   return {
