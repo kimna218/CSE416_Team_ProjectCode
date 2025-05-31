@@ -47,7 +47,7 @@ const Explore: React.FC = () => {
                 <p>{r.description}</p>
                 <div className="explore-meta">
                   <span>👤 {r.user_nickname}</span>
-                  <span style={{ color: "#e74c3c" }}>❤️ {r.likes}</span>
+                  <span style={{ color: "#e74c3c" }}>♥ {r.likes}</span>
                 </div>
               </div>
             </div>

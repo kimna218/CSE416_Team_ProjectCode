@@ -286,7 +286,7 @@ const Feed: React.FC = () => {
             </div>
             <div className="post-actions">
               <button className="like-btn" onClick={() => handleLike(post.id)}>
-                {userLikes[post.id] ? "💔 Unlike" : "❤️ Like"}{" "}
+                {userLikes[post.id] ? "♡ Unlike" : "♥ Like"}{" "}
                 {likes[post.id] || 0}
               </button>
               <button
