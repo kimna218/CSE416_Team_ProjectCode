@@ -10,6 +10,10 @@ import RecipeDetails from "./pages/RecipeDetails";
 import Login from "./pages/Login";
 import ProtectedRoute from './components/ProtectedRoute'; 
 import UserSetupPage from './components/UserSetupPage';
+import MyRecipe from "./pages/MyRecipe";
+import MyRecipeDetails from "./pages/MyRecipeDetails";
+import UploadRecipe from "./components/UploadRecipe";
+import Explore from "./pages/Explore";
 
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import { getAuth } from "firebase/auth";
@@ -71,6 +75,16 @@ const App: React.FC = () => {
         />
         <Route path="/recipes/detail/:recipeName" element={<RecipeDetails />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/MyRecipe" 
+          element={
+            <ProtectedRoute>
+              <MyRecipe />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/MyRecipe/UploadRecipe" element={<UploadRecipe />} />
+        <Route path="/MyRecipe/detail/:id" element={<MyRecipeDetails />} />
+        <Route path="/Explore" element={<Explore />} />
       </Routes>
     </main>
   );

@@ -23,6 +23,7 @@ function Profile() {
   const [initialDisliked, setInitialDisliked] = useState<string[]>([]);
   const [initialLiked, setInitialLiked] = useState<string[]>([]);
   const [favoriteRecipesData, setFavoriteRecipesData] = useState<Recipe[]>([]);
+  const [favoriteUserRecipesData, setFavoriteUserRecipesData] = useState<Recipe[]>([]);
 
   useEffect(() => {
     const auth = getAuth();
@@ -34,13 +35,19 @@ function Profile() {
           const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${currentUser.uid}`);
           const data = await res.json();
           const userData = data.user;
-          const recipeNames = JSON.parse(data.user.favorite_recipes || "[]");
+
+          const recipeNames = JSON.parse(userData.favorite_recipes || "[]");
+          const rawIds = userData.favorite_user_recipes || "";
+          const userRecipeIds = rawIds.split(",").map((id: string) => id.trim()).filter(Boolean);
+          
           setUser({
             name: userData.nickname || currentUser.displayName,
             email: userData.email || "",
             profileImage: currentUser.photoURL || "/images/default-profile.jpg",
             favoriteRecipes: recipeNames,
+            favoriteUserRecipeIds: userRecipeIds,
           });
+          
 
           const liked = JSON.parse(userData.liked_ingredients || "[]");
           const disliked = JSON.parse(userData.disliked_ingredients || "[]");
@@ -49,17 +56,22 @@ function Profile() {
           setDislikedList(disliked);
           setInitialLiked(liked);
           setInitialDisliked(disliked);
-          setFavoriteRecipesData(recipeNames);
 
-          // ✅ 각 레시피 정보 개별 fetch
           const fetchedRecipes = await Promise.all(
             recipeNames.map(async (name: string) => {
               const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/detail/${encodeURIComponent(name)}`);
-              return await res.json(); // { id, name, image_url, ... }
+              return await res.json();
             })
           );
-
           setFavoriteRecipesData(fetchedRecipes);
+
+          const fetchedUserRecipes = await Promise.all(
+            userRecipeIds.map(async (id: string) => {
+              const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/my/${id}?firebase_uid=${currentUser.uid}`);
+              return await res.json();
+            })
+          );
+          setFavoriteUserRecipesData(fetchedUserRecipes);
 
         } catch (err) {
           console.error("Failed to fetch user info:", err);
@@ -146,11 +158,7 @@ function Profile() {
   return (
     <div className="profile-page">
       <div className="profile-header">
-        <img
-          src={user.profileImage}
-          alt={`${user.name}'s profile`}
-          className="profile-image"
-        />
+        <img src={user.profileImage} alt={`${user.name}'s profile`} className="profile-image" />
         <h1>{user.name}</h1>
         <p>{user.email}</p>
         <button className="logout-button" onClick={handleLogout}>Logout</button>
@@ -173,17 +181,30 @@ function Profile() {
       </div>
 
       <div className="profile-section">
-        <h2>Preferences</h2>
+        <h2>Favorite User's Recipes</h2>
+        <div className="favorite-recipes">
+          {user.favoriteUserRecipeIds.length === 0 ? (
+            <p>No favorite user recipes yet.</p>
+          ) : (
+            favoriteUserRecipesData.map((recipe) => (
+              <div key={recipe.id} className="profile-recipe-card" onClick={() => navigate(`/MyRecipe/detail/${recipe.id}`)}>
+                <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
+                <p className="recipe-name">{recipe.name}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
+      <div className="profile-section">
+        <h2>Preferences</h2>
         {isEditing ? (
           <>
             <div style={{ marginTop: "10px" }}>
               <label><strong>Liked Ingredients:</strong></label><br />
               <div className="tag-list">
                 {likedList.map((item, i) => (
-                  <div key={i} className="tag" onClick={() => handleRemoveLiked(item)}>
-                    {item}
-                  </div>
+                  <div key={i} className="tag" onClick={() => handleRemoveLiked(item)}>{item}</div>
                 ))}
               </div>
               <div style={{ marginTop: 5 }}>
@@ -191,9 +212,7 @@ function Profile() {
                   value={likedInput}
                   onChange={(e) => setLikedInput(e.target.value)}
                   placeholder="Add ingredient"
-                  onKeyUp={(e) => {
-                    if (e.key === "Enter") handleAddLike();
-                  }}
+                  onKeyUp={(e) => { if (e.key === "Enter") handleAddLike(); }}
                 />
                 <button onClick={handleAddLike}>+ Add</button>
               </div>
@@ -203,9 +222,7 @@ function Profile() {
               <label><strong>Disliked Ingredients:</strong></label><br />
               <div className="tag-list disliked">
                 {dislikedList.map((item, i) => (
-                  <div key={i} className="tag" onClick={() => handleRemoveDisliked(item)}>
-                    {item}
-                  </div>
+                  <div key={i} className="tag" onClick={() => handleRemoveDisliked(item)}>{item}</div>
                 ))}
               </div>
               <div style={{ marginTop: 5 }}>
@@ -213,9 +230,7 @@ function Profile() {
                   value={dislikedInput}
                   onChange={(e) => setDislikedInput(e.target.value)}
                   placeholder="Add ingredient"
-                  onKeyUp={(e) => {
-                    if (e.key === "Enter") handleAddDislike();
-                  }}
+                  onKeyUp={(e) => { if (e.key === "Enter") handleAddDislike(); }}
                 />
                 <button onClick={handleAddDislike}>+ Add</button>
               </div>

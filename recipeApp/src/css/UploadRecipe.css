@@ -1,0 +1,39 @@
+.upload-page {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+.upload-page input,
+.upload-page textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+}
+
+.steps-box ul {
+    margin-top: 10px;
+    padding-left: 20px;
+}
+
+.nutrition-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nutrition-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nutrition-row span {
+    width: 120px;
+    font-weight: 500;
+}
+
+.nutrition-row input {
+    flex: 1;
+    padding: 6px;
+}

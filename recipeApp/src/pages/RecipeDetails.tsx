@@ -155,7 +155,7 @@ const RecipeDetails: React.FC = () => {
             onClick={async () => {
               const auth = getAuth();
               const currentUser = auth.currentUser;
-              if (!currentUser) return alert("로그인이 필요합니다.");
+              if (!currentUser) return alert("Please login first.");
               setIsFavorited(!isFavorited);
               try {
                 await fetch(`${import.meta.env.VITE_API_URL}/users/${currentUser.uid}/favorites`, {
