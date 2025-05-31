@@ -967,7 +967,26 @@ app.delete("/recipes/my/:id", async (req, res) => {
       return res.status(404).json({ error: "Not found or unauthorized" });
     }
 
-    res.json({ message: "Recipe deleted" });
+    // 모든 유저의 favorite_user_recipes에서 해당 ID 제거
+    const users = await pool.query(
+      `SELECT id, favorite_user_recipes FROM users WHERE favorite_user_recipes IS NOT NULL`
+    );
+
+    for (const user of users.rows) {
+      const updatedFavorites = user.favorite_user_recipes
+        .split(",")
+        .map((s) => s.trim())
+        .filter((favId) => favId !== id);
+
+      const newValue = updatedFavorites.length > 0 ? updatedFavorites.join(",") : null;
+
+      await pool.query(
+        `UPDATE users SET favorite_user_recipes = $1 WHERE id = $2`,
+        [newValue, user.id]
+      );
+    }
+
+    res.json({ message: "Recipe deleted and removed from all users' favorites" });
   } catch (err) {
     console.error("Error deleting recipe:", err);
     res.status(500).json({ error: "Failed to delete recipe" });
