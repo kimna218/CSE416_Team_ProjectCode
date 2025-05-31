@@ -1,0 +1,84 @@
+.my-recipes-page {
+    font-family: 'Inter', sans-serif;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 20px;
+    padding-right: 40px;
+    width: 100vw; 
+}
+
+.my-recipes-page h1 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    color: #FF7043;
+    text-transform: uppercase;
+    letter-spacing: 1px; 
+}
+
+.recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.recipe-card {
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #fff;
+    transition: box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.recipe-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.recipe-thumbnail {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.my-recipes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.my-recipes-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.upload-button,
+.explore-button {
+  background-color: #ffa07a;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: black;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.upload-button:hover,
+.explore-button:hover {
+  background-color: #f75f28;
+  color: white;
+}
+
+.delete-button {
+    margin-top: 10px;
+    background-color: #ff5555;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}

@@ -115,7 +115,8 @@ await pool.query(`
     nickname VARCHAR(50) NOT NULL,
     liked_ingredients TEXT,
     disliked_ingredients TEXT,
-    favorite_recipes TEXT
+    favorite_recipes TEXT,
+    favorite_user_recipes TEXT
   )
 `);
 
@@ -133,6 +134,21 @@ await pool.query(`
       PRIMARY KEY (user_id, recipe_id),
       FOREIGN KEY (user_id) REFERENCES users (firebase_uid),
       FOREIGN KEY (recipe_id) REFERENCES recipes (id)
+  )
+`);
+
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS my_recipes (
+      id SERIAL PRIMARY KEY,
+      user_id VARCHAR(255) NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      image_url TEXT,
+      ingredients TEXT,
+      steps JSONB,
+      nutrition JSONB,
+      likes INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )
 `);
 
@@ -209,7 +225,7 @@ const importRecipesFromOpenAPI = async () => {
             );
           }
         } catch (e) {
-          console.warn("Fail to insert:", name, e.message);
+          console.warn("Fail to insert steps:", name, e.message);
         }
       }
     }
@@ -863,6 +879,204 @@ app.get("/recommend-recipes", async (req, res) => {
   }
 });
 
+
+/* * * * * * * * * */
+/*   My Recipes    */
+/* * * * * * * * * */
+app.post("/recipes/my", async (req, res) => {
+  const {
+    firebase_uid,
+    title,
+    description,
+    image_url,
+    ingredients,
+    steps,
+    nutrition,
+  } = req.body;
+
+  try {
+    await pool.query(
+      `INSERT INTO my_recipes 
+        (user_id, title, description, image_url, ingredients, steps, nutrition, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+      [
+        firebase_uid,
+        title,
+        description,
+        image_url,
+        ingredients,
+        JSON.stringify(steps),
+        JSON.stringify(nutrition),
+      ]
+    );
+    res.json({ message: "Recipe saved" });
+  } catch (err) {
+    console.error("Error saving recipe:", err);
+    res.status(500).json({ error: "Failed to save recipe" });
+  }
+});
+
+
+app.get("/recipes/my", async (req, res) => {
+  const { firebase_uid } = req.query;
+
+  try {
+    const result = await pool.query(
+      `SELECT id, title, description, image_url FROM my_recipes WHERE user_id = $1 ORDER BY created_at DESC`,
+      [firebase_uid]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error loading recipes:", err);
+    res.status(500).json({ error: "Failed to fetch recipes" });
+  }
+});
+
+app.get("/recipes/my/:id", async (req, res) => {
+  const { id } = req.params;
+  const { firebase_uid } = req.query;
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM my_recipes WHERE id = $1 AND user_id = $2`,
+      [id, firebase_uid]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error loading recipe:", err);
+    res.status(500).json({ error: "Failed to fetch recipe" });
+  }
+});
+
+app.delete("/recipes/my/:id", async (req, res) => {
+  const { id } = req.params;
+  const { firebase_uid } = req.query;
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM my_recipes WHERE id = $1 AND user_id = $2`,
+      [id, firebase_uid]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Not found or unauthorized" });
+    }
+
+    res.json({ message: "Recipe deleted" });
+  } catch (err) {
+    console.error("Error deleting recipe:", err);
+    res.status(500).json({ error: "Failed to delete recipe" });
+  }
+});
+
+// GET /recipes/explore
+app.get("/recipes/explore", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT m.id, m.title, m.description, m.image_url, m.likes, u.nickname AS user_nickname
+       FROM my_recipes m
+       JOIN users u ON m.user_id = u.firebase_uid
+       ORDER BY m.likes DESC, m.created_at DESC`
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching explore recipes:", err);
+    res.status(500).json({ error: "Failed to fetch recipes" });
+  }
+});
+
+app.post("/recipes/:id/like", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `UPDATE my_recipes SET likes = likes + 1 WHERE id = $1 RETURNING likes`,
+      [id]
+    );
+    res.json({ likes: result.rows[0].likes });
+  } catch (err) {
+    console.error("Error liking recipe:", err);
+    res.status(500).json({ error: "Failed to update likes" });
+  }
+});
+
+// Add favorite user recipe
+// server.js 또는 routes 파일에 아래 추가
+app.post("/users/:firebase_uid/favorite-user-recipes", async (req, res) => {
+  const { firebase_uid } = req.params;
+  const { recipeId } = req.body;
+
+  try {
+    const userResult = await pool.query(
+      "SELECT favorite_user_recipes FROM users WHERE firebase_uid = $1",
+      [firebase_uid]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const favorites = (userResult.rows[0].favorite_user_recipes || "").split(",").filter(Boolean);
+
+    if (!favorites.includes(recipeId.toString())) {
+      favorites.push(recipeId.toString());
+
+      await pool.query(
+        "UPDATE users SET favorite_user_recipes = $1 WHERE firebase_uid = $2",
+        [favorites.join(","), firebase_uid]
+      );
+
+      await pool.query("UPDATE my_recipes SET likes = likes + 1 WHERE id = $1", [recipeId]);
+    }
+
+    res.status(200).json({ message: "Added to favorite_user_recipes" });
+  } catch (err) {
+    console.error("Error adding to favorite_user_recipes:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Remove favorite user recipe
+app.delete("/users/:firebase_uid/favorite-user-recipes", async (req, res) => {
+  const { firebase_uid } = req.params;
+  const { recipeId } = req.body;
+
+  try {
+    const userResult = await pool.query(
+      "SELECT favorite_user_recipes FROM users WHERE firebase_uid = $1",
+      [firebase_uid]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const currentFavorites = userResult.rows[0].favorite_user_recipes || "";
+    const favorites = currentFavorites.split(",").filter((s) => s && s !== recipeId.toString());
+
+    // likes -1
+    await pool.query(
+      "UPDATE my_recipes SET likes = GREATEST(likes - 1, 0) WHERE id = $1",
+      [recipeId]
+    );
+
+    await pool.query(
+      "UPDATE users SET favorite_user_recipes = $1 WHERE firebase_uid = $2",
+      [favorites.join(","), firebase_uid]
+    );
+
+    res.status(200).json({ message: "User recipe removed from favorites" });
+  } catch (err) {
+    console.error("Error removing favorite user recipe:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // 디버깅용 구문
 app.get("/admin/reset-feed", async (req, res) => {

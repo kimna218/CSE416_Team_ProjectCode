@@ -45,6 +45,7 @@ const AppNavbar: React.FC = () => {
             <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/home')}>Home</Button>
             <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/category')}>Category</Button>
             <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/feed')}>Feed</Button>
+            <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/MyRecipe')}>MyRecipe</Button>
           </Nav>
         </div>
 
