@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import AppNavbar from './components/Navbar';
 import Home from './pages/Home';
 import Feed from './pages/Feed';
@@ -14,6 +14,7 @@ import MyRecipe from "./pages/MyRecipe";
 import MyRecipeDetails from "./pages/MyRecipeDetails";
 import UploadRecipe from "./components/UploadRecipe";
 import Explore from "./pages/Explore";
+import Guideline from "./components/guideline";
 
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import { getAuth } from "firebase/auth";
@@ -21,12 +22,19 @@ import { getAuth } from "firebase/auth";
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
+    // 첫 접속 시만 안내 모달 보여주기
+    const seen = localStorage.getItem("hasSeenGuideline");
+    if (!seen) {
+      setShowGuide(true);
+      localStorage.setItem("hasSeenGuideline", "true");
+    }
+
     const auth = getAuth();
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
-
         try {
           const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${firebaseUser.uid}`);
           const data = await res.json();
@@ -50,6 +58,9 @@ const App: React.FC = () => {
 
   return (
     <main className="container mt-5">
+      {/* 안내 모달 한 번만 표시 */}
+      {showGuide && <Guideline onClose={() => setShowGuide(false)} />}
+
       <Routes>
         <Route path="/setup" element={<UserSetupPage />} />
         <Route path="/" element={<Home />} />
