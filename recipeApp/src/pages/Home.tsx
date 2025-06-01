@@ -35,14 +35,7 @@ function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const recipesPerPage = 12;
 
-const fetchRecommended = async () => {
-  const uid = getAuth().currentUser?.uid;
-  if (!uid) {
-    console.log("User not authenticated");
-    setRecommendedRecipes([]);
-    return;
-  }
-
+const fetchRecommended = async (uid: string) => {
   const today = new Date().toISOString().slice(0, 10);
   const cacheKey = `recommendations_${uid}`;
   const cached = localStorage.getItem(cacheKey);
@@ -120,15 +113,14 @@ const fetchRecommended = async () => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        fetchRecommended();
+        fetchRecommended(user.uid);
       } else {
-        console.log("User is authenticated, skipping recommendations");
+        console.log("User is not authenticated, skipping recommendations");
       }
     });
 
     fetchRecipesWithNutrition();
     fetchPopularRecipes();
-    fetchRecommended();
 
     return () => unsubscribe();
   }, []);

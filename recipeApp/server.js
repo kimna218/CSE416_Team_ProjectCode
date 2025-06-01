@@ -748,7 +748,11 @@ app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
 // Recommendation API
 app.get("/recommend-recipes", async (req, res) => {
   const uid = req.query.uid;
-  if (!uid) return res.status(400).json({ error: "Missing UID" });
+  if (!uid) {
+    return res.status(400).json({ error: "Missing UID" });
+  }
+
+  console.log("✅ Received request for recommendations. UID:", uid);
 
   try {
     // 1. 사용자 선호 재료 불러오기
@@ -773,11 +777,12 @@ app.get("/recommend-recipes", async (req, res) => {
     }
 
     // 2. 레시피 리스트 일부 불러오기 (토큰 초과 방지)
-    const recipesRes = await pool.query(`
-      SELECT id, title, ingredients, description
-      FROM recipes
-      LIMIT 15
-    `);
+const recipesRes = await pool.query(`
+  SELECT id, name AS title, ingredients
+  FROM recipes
+  WHERE ingredients IS NOT NULL
+  LIMIT 15
+`);
 
     // 3. GPT 프롬프트 생성
     const prompt = `
@@ -795,7 +800,7 @@ ${recipesRes.rows
     (r, i) =>
       `${i + 1}. ID: ${r.id}, Title: ${r.title}, Ingredients: ${
         r.ingredients
-      }, Description: ${r.description}`
+      }`
   )
   .join("\n")}
 `;
