@@ -97,3 +97,54 @@
 .navbar-icons .icon-btn svg {
   font-size: 18px;
 }
+
+.custom-toggle {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  transition: all 0.3s ease;
+}
+
+.custom-toggle.open {
+  background-color: #ffe2d1;
+  border-radius: 8px;
+}
+
+.custom-toggle:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* 기본적으로 숨기기/보이기 제어 */
+.desktop-menu {
+  gap: 20px;
+}
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  width: 93vw;
+  padding: 1rem;
+}
+
+/* 화면 작을 땐 데스크탑 메뉴 숨기고 모바일 메뉴 보이기 */
+@media (min-width: 768px) {
+  .navbar-collapse {
+    display: none !important;
+  }
+
+  .mobile-menu {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-menu {
+    display: none;
+  }
+
+  .mobile-menu {
+    display: flex;
+  }
+}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/Navbar.css";
-import { Container, Nav, Navbar, Button, Form } from "react-bootstrap";
+import { Container, Navbar, Button, Form } from "react-bootstrap";
 import { FaSearch, FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -34,35 +34,13 @@ const AppNavbar: React.FC = () => {
           </Navbar.Brand>
         </div>
 
-        <Navbar.Toggle aria-controls="center-collapse" />
+            <div className="navbar-center desktop-menu">
+      <Button className="nav-btn" onClick={() => navigate("/category")}>Category</Button>
+      <Button className="nav-btn" onClick={() => navigate("/feed")}>Feed</Button>
+      <Button className="nav-btn" onClick={() => navigate("/MyRecipe")}>My Recipe</Button>
+    </div>
 
-        <Navbar.Collapse id="center-collapse" className="w-100">
-          <div className="navbar-center">
-          <Nav className="navbar-buttons">
-            <Button
-              variant="outline-primary"
-              className="nav-btn"
-              onClick={() => navigate("/category")}
-            >
-              Category
-            </Button>
-            <Button
-              variant="outline-primary"
-              className="nav-btn"
-              onClick={() => navigate("/feed")}
-            >
-              Feed
-            </Button>
-            <Button
-              variant="outline-primary"
-              className="nav-btn"
-              onClick={() => navigate("/MyRecipe")}
-            >
-              My Recipe
-            </Button>
-          </Nav>
-        </div>
-        </Navbar.Collapse>
+        <Navbar.Toggle aria-controls="center-collapse" className="custom-toggle" />
 
         <div className="navbar-right">
           <Form className="d-flex align-items-center navbar-icons">
@@ -109,6 +87,16 @@ const AppNavbar: React.FC = () => {
           </Form>
         </div>
       </Container>
+
+      <div className="no-display">
+        <Navbar.Collapse>
+          <div className="mobile-menu">
+            <Button className="nav-btn" onClick={() => navigate("/category")}>Category</Button>
+            <Button className="nav-btn" onClick={() => navigate("/feed")}>Feed</Button>
+            <Button className="nav-btn" onClick={() => navigate("/MyRecipe")}>My Recipe</Button>
+          </div>
+        </Navbar.Collapse>
+      </div>
     </Navbar>
     </>
   );
