@@ -31,6 +31,7 @@ const Feed: React.FC = () => {
   const [likes, setLikes] = useState<Record<number, number>>({});
   const [uploadMessage, setUploadMessage] = useState<string>("");
   const [userLikes, setUserLikes] = useState<Record<number, boolean>>({});
+  const [myNickname, setMyNickname] = useState<string>("");
 
   const CLOUDINARY_URL =
     "https://api.cloudinary.com/v1_1/dlm1w7msc/image/upload";
@@ -231,9 +232,40 @@ const Feed: React.FC = () => {
     }
   };
 
+  const handleDeletePost = async (postId: number) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/posts/${postId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (res.ok) {
+        setPosts((prev) => prev.filter((post) => post.id !== postId));
+        const newLikes = { ...likes };
+        delete newLikes[postId];
+        setLikes(newLikes);
+      } else {
+        console.error("Failed to delete post.");
+      }
+    } catch (err) {
+      console.error("Error deleting post:", err);
+    }
+  };
+
   useEffect(() => {
     fetchPosts();
     fetchUserLikes();
+
+    const fetchMe = async () => {
+      const nickname = await fetchNickname();
+      if (nickname) setMyNickname(nickname);
+    };
+
+    fetchMe();
   }, []);
 
   return (
@@ -294,6 +326,7 @@ const Feed: React.FC = () => {
               <p className="post-user">@{post.username}</p>
               <p className="post-caption">{post.caption}</p>
             </div>
+
             <div className="post-actions">
               <button className="like-btn" onClick={() => handleLike(post.id)}>
                 {userLikes[post.id] ? "♥" : "♡"} {likes[post.id] || 0}
@@ -304,6 +337,14 @@ const Feed: React.FC = () => {
               >
                 💬 Comment
               </button>
+              {myNickname === post.username && (
+                <button
+                  className="delete-btn"
+                  onClick={() => handleDeletePost(post.id)}
+                >
+                  🗑 Delete
+                </button>
+              )}
             </div>
             {showComments[post.id] && (
               <div className="comments-section">

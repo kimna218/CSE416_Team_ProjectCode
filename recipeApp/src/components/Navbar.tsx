@@ -28,7 +28,7 @@ const AppNavbar: React.FC = () => {
     <Navbar bg="light" expand="lg" className="custom-navbar shadow-sm py-3">
       <Container className="d-grid navbar-grid">
         <div className="navbar-left">
-          <Button variant="link" onClick={() => setCurrentLang("ko")} className="me-2">
+          <Button variant="link" onClick={() => setCurrentLang("ko")}>
               🇰🇷
           </Button>
           <Button variant="link" onClick={() => setCurrentLang("en")}>
@@ -42,10 +42,9 @@ const AppNavbar: React.FC = () => {
 
         <div className="navbar-center">
           <Nav className="navbar-buttons">
-            <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/home')}>Home</Button>
             <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/category')}>Category</Button>
             <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/feed')}>Feed</Button>
-            <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/MyRecipe')}>MyRecipe</Button>
+            <Button variant="outline-primary" className="nav-btn" onClick={() => navigate('/MyRecipe')}>My Recipe</Button>
           </Nav>
         </div>
 

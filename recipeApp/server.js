@@ -500,6 +500,18 @@ app.post("/posts/:postId/comments", async (req, res) => {
   }
 });
 
+app.delete("/posts/:postId", async (req, res) => {
+  const { postId } = req.params;
+  try {
+    await pool.query(`DELETE FROM posts WHERE id = $1`, [postId]);
+    res.status(200).json({ message: "Post deleted successfully" });
+  } catch (err) {
+    console.error("Failed to delete post:", err);
+    res.status(500).json({ error: "Failed to delete post" });
+  }
+});
+
+
 /* * * * * * * * */
 /*     Users     */
 /* * * * * * * * */

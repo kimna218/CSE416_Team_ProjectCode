@@ -191,3 +191,15 @@
 .comments-section button:hover {
   background-color: #e5582c;
 }
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: crimson;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.delete-btn:hover {
+  text-decoration: underline;
+}
+
