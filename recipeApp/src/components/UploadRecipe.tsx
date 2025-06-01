@@ -116,6 +116,7 @@ const UploadRecipe: React.FC = () => {
   };
 
   return (
+    <div className="upload-wrapper">
     <div className="upload-page">
       <h2>Upload Your Recipe</h2>
 
@@ -174,8 +175,9 @@ const UploadRecipe: React.FC = () => {
       </div>
 
       <button className="submit-button" onClick={handleSubmit} disabled={isUploading}>
-        ✅ Save Recipe
+        Save Recipe
       </button>
+    </div>
     </div>
   );
 };
