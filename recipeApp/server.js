@@ -798,22 +798,39 @@ app.get("/recommend-recipes", async (req, res) => {
     }
 
     // 3. GPT 프롬프트 생성
-    const prompt = `
-You are a helpful recipe recommendation assistant.
+const prompt = `
+You are an expert culinary assistant that recommends recipes based on user preferences.
 
-A user likes the following ingredients: ${liked.join(", ")}.
-They dislike the following: ${disliked.join(", ")}.
+The user **likes** the following ingredients:
+- ${liked.join("\n- ") || "None"}
 
-Given the recipe list below, recommend the top 3 recipes that best match the user's taste.
-Respond ONLY as a JSON array like this: [{"id": ..., "title": "...", "reason": "..."}]
+The user **dislikes** the following ingredients:
+- ${disliked.join("\n- ") || "None"}
 
-Recipes:
+Below is a list of candidate recipes. Each includes an ID, title, and ingredients. 
+Your task is to select the **top 6 most suitable recipes** based on the user's preferences.
+
+Important:
+- Prioritize recipes that include liked ingredients.
+- Avoid recipes that contain disliked ingredients.
+- For each selected recipe, include a short explanation ("reason") for why it matches the user's preferences.
+- Respond **only as a JSON array** in this format:
+[
+  {
+    "id": 1,
+    "title": "Spicy Kimchi Fried Rice",
+    "reason": "It uses kimchi and rice, which the user likes, and contains none of the disliked ingredients."
+  },
+  ...
+]
+
+Candidate Recipes:
 ${recipesRes.rows
   .map(
     (r, i) =>
-      `${i + 1}. ID: ${r.id}, Title: ${r.title}, Ingredients: ${r.ingredients}`
+      `${i + 1}. ID: ${r.id}\nTitle: ${r.title}\nIngredients: ${r.ingredients}`
   )
-  .join("\n")}
+  .join("\n\n")}
 `;
 
     // 4. GPT-3.5 API 호출
