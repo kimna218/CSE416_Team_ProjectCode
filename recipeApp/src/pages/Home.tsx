@@ -30,28 +30,54 @@ function Home() {
   const [popularRecipes, setPopularRecipes] = useState<Recipe[]>([]);
   const [sortKey, setSortKey] = useState<string>("protein");
   const [recommendedRecipes, setRecommendedRecipes] = useState<any[]>([]);
+  const [recommendationMessage, setRecommendationMessage] = useState<string>("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const recipesPerPage = 12;
 
-  const fetchRecommended = async () => {
-    const uid = getAuth().currentUser?.uid;
-    if (!uid) {
-      console.log("User not authenticated");
+const fetchRecommended = async () => {
+  const uid = getAuth().currentUser?.uid;
+  if (!uid) {
+    console.log("User not authenticated");
+    setRecommendedRecipes([]);
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const cacheKey = `recommendations_${uid}`;
+  const cached = localStorage.getItem(cacheKey);
+
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    if (parsed.date === today) {
+      setRecommendedRecipes(parsed.data);
+      return;
+    }
+  }
+
+  try {
+    const res = await fetch(
+      `${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`
+    );
+    const data = await res.json();
+
+    if (data.error === "no-preference") {
       setRecommendedRecipes([]);
+      localStorage.setItem(cacheKey, JSON.stringify({ date: today, data: [] }));
+      setRecommendationMessage(data.message); // 👈 상태에 메시지 저장
       return;
     }
 
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`
-      );
-      const data = await res.json();
-      setRecommendedRecipes(data);
-    } catch (err) {
-      console.error("Failed to fetch recommended recipes", err);
-    }
-  };
+    setRecommendedRecipes(data);
+    localStorage.setItem(cacheKey, JSON.stringify({ date: today, data }));
+    setRecommendationMessage(""); // 메시지 초기화
+  } catch (err) {
+    console.error("Failed to fetch recommended recipes", err);
+    setRecommendedRecipes([]);
+    setRecommendationMessage("Failed to load recommendations.");
+  }
+};
+
 
   useEffect(() => {
     const fetchRecipesWithNutrition = async () => {
@@ -144,30 +170,33 @@ function Home() {
         </p>
       </div>
 
-      <div className="categories-preview">
-        <h2>AI Recommended Recipes</h2>
-        <div className="rec-recipe-grid">
-          {recommendedRecipes.length > 0 ? (
-            recommendedRecipes.map((recipe) => (
-              <div
-                key={recipe.id}
-                className="rec-recipe-card"
-                onClick={() => handleClick(recipe)}
-              >
-                <img
-                  src={recipe.image_url}
-                  alt={recipe.name}
-                  className="rec-recipe-image"
-                />
-                <p className="home-recipe-name">{lang === "en" ? recipe.en_name || recipe.name : recipe.name}</p>
-                <p className="rec-reason">{recipe.reason}</p>
-              </div>
-            ))
-          ) : (
-            <p>Loading recommendations...</p>
-          )}
+<div className="categories-preview">
+  <h2>AI Recommended Recipes</h2>
+  <div className="rec-recipe-grid">
+    {recommendedRecipes.length > 0 ? (
+      recommendedRecipes.map((recipe) => (
+        <div
+          key={recipe.id}
+          className="rec-recipe-card"
+          onClick={() => handleClick(recipe)}
+        >
+          <img
+            src={recipe.image_url}
+            alt={recipe.name}
+            className="rec-recipe-image"
+          />
+          <p className="home-recipe-name">
+            {lang === "en" ? recipe.en_name || recipe.name : recipe.name}
+          </p>
+          <p className="rec-reason">{recipe.reason}</p>
         </div>
-      </div>
+      ))
+    ) : (
+      <p>{recommendationMessage || "Loading recommendations..."}</p>
+    )}
+  </div>
+</div>
+
 
       <div className="popular-recipes">
         <h2>Popular Recipes</h2>
@@ -183,7 +212,9 @@ function Home() {
                 alt={recipe.name}
                 className="popular-recipe-image"
               />
-              <p className="home-recipe-name">{lang == "en" ? recipe.en_name || recipe.name : recipe.name}</p>
+              <p className="home-recipe-name">
+                {lang == "en" ? recipe.en_name || recipe.name : recipe.name}
+              </p>
               <p className="home-recipe-likes">❤️ {recipe.likes} Likes</p>
             </div>
           ))}
@@ -220,8 +251,10 @@ function Home() {
               alt={recipe.name}
               className="home-recipe-image"
             />
-              <p className="home-recipe-name">{lang == "en" ? recipe.en_name || recipe.name : recipe.name}</p>
-              <p className="nutrition-info">
+            <p className="home-recipe-name">
+              {lang == "en" ? recipe.en_name || recipe.name : recipe.name}
+            </p>
+            <p className="nutrition-info">
               {`Protein: ${recipe.protein.toFixed(
                 1
               )}g | Carbs: ${recipe.carbohydrates.toFixed(

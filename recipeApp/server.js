@@ -183,7 +183,14 @@ const importRecipesFromOpenAPI = async () => {
             VALUES ($1, $2, $3, $4, $5, $6)
             ON CONFLICT (name) DO NOTHING
             RETURNING id`,
-            [name, en_name, category, image_url, ingredientsText, en_ingredients]
+            [
+              name,
+              en_name,
+              category,
+              image_url,
+              ingredientsText,
+              en_ingredients,
+            ]
           );
 
           let recipe_id = insertResult.rows[0]?.id;
@@ -273,7 +280,7 @@ export async function translateText(text, targetLang = "EN") {
       auth_key: process.env.DEEPL_API_KEY,
       text,
       source_lang: "KO",
-      target_lang: targetLang
+      target_lang: targetLang,
     }),
   });
 
@@ -511,7 +518,6 @@ app.delete("/posts/:postId", async (req, res) => {
   }
 });
 
-
 /* * * * * * * * */
 /*     Users     */
 /* * * * * * * * */
@@ -740,101 +746,12 @@ app.get("/recipes/:recipeId/rate/:userId", async (req, res) => {
 });
 
 // Recommendation API
-// app.get("/recommend-recipes", async (req, res) => {
-//   const uid = req.query.uid;
-//   if (!uid) return res.status(400).json({ error: "Missing uid" });
-
-//   try {
-//     const userRes = await pool.query(
-//       "SELECT liked_ingredients, disliked_ingredients FROM users WHERE firebase_uid = $1",
-//       [uid]
-//     );
-
-//     if (userRes.rows.length === 0) {
-//       return res.status(404).json({ error: "User not found" });
-//     }
-
-//     const liked = JSON.parse(userRes.rows[0].liked_ingredients || "[]");
-//     const disliked = JSON.parse(userRes.rows[0].disliked_ingredients || "[]");
-
-//     const recipeRes = await pool.query(`
-//       SELECT id, name, category, ingredients FROM recipes
-//     `);
-//     const recipeData = recipeRes.rows;
-
-//     const recipeListString = recipeData
-//       .map(
-//         (r, i) =>
-//           `${i + 1}. ${r.name} (Category: ${r.category}, Ingredients: ${
-//             r.ingredients
-//           })`
-//       )
-//       .join("\n");
-
-//     const prompt = `
-// You are a recipe recommendation assistant. The user likes these ingredients: ${liked.join(
-//       ", "
-//     )}, and dislikes these: ${disliked.join(
-//       ", "
-//     )}. You are given a list of 100 recipes. Choose ONLY 5 recipes that:
-// - Contain many of the liked ingredients
-// - Do NOT contain any disliked ingredients
-
-// Only recommend from this list. Return exactly this JSON format:
-
-// [
-//   { "id": 1, "name": "Recipe Name", "reason": "Short reason" },
-//   ...
-// ]
-
-// Here is the recipe list:
-// ${recipeListString}
-// `;
-
-//     const response = await openai.chat.completions.create({
-//       model: "gpt-3.5-turbo",
-//       messages: [
-//         {
-//           role: "user",
-//           content: prompt,
-//         },
-//       ],
-//     });
-
-//     const content = response.choices[0].message.content;
-//     try {
-//       const recommended = JSON.parse(content);
-//       const ids = recommended.map((r) => r.id);
-
-//       // DB에서 상세정보 불러오기
-//       const finalRes = await pool.query(
-//         `SELECT id, name, category, image_url FROM recipes WHERE id = ANY($1)`,
-//         [ids]
-//       );
-
-//       // reason도 포함해서 반환
-//       const enriched = finalRes.rows.map((rec) => {
-//         const reason = recommended.find((r) => r.id === rec.id)?.reason || "";
-//         return { ...rec, reason };
-//       });
-
-//       res.json(enriched);
-//     } catch (err) {
-//       console.error("OpenAI JSON parse error:\n", content);
-//       res.status(500).json({ error: "Invalid OpenAI response format." });
-//     }
-//   } catch (err) {
-//     console.error("Error in recommend-recipes:", err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
-
-// Simple recommender based on liked/disliked ingredients
 app.get("/recommend-recipes", async (req, res) => {
   const uid = req.query.uid;
   if (!uid) return res.status(400).json({ error: "Missing UID" });
 
   try {
+    // 1. 사용자 선호 재료 불러오기
     const userRes = await pool.query(
       "SELECT liked_ingredients, disliked_ingredients FROM users WHERE firebase_uid = $1",
       [uid]
@@ -847,32 +764,70 @@ app.get("/recommend-recipes", async (req, res) => {
     const liked = JSON.parse(userRes.rows[0].liked_ingredients || "[]");
     const disliked = JSON.parse(userRes.rows[0].disliked_ingredients || "[]");
 
-    const recipesRes = await pool.query("SELECT * FROM recipes");
-    const scored = recipesRes.rows
-      .map((r) => {
-        const ingredients = (r.ingredients || "").toLowerCase();
-        let score = 0;
+    if (liked.length === 0 && disliked.length === 0) {
+      console.log("GPT-3.5 recommender: no preferences found");
+      return res.status(200).json({
+        error: "no-preference",
+        message: "Please add preferences to get the recommendation.",
+      });
+    }
 
-        for (const l of liked) {
-          if (ingredients.includes(l.toLowerCase())) score++;
-        }
-        for (const d of disliked) {
-          if (ingredients.includes(d.toLowerCase())) score -= 5;
-        }
+    // 2. 레시피 리스트 일부 불러오기 (토큰 초과 방지)
+    const recipesRes = await pool.query(`
+      SELECT id, title, ingredients, description
+      FROM recipes
+      LIMIT 15
+    `);
 
-        return { ...r, score, reason: `Matched score: ${score}` };
-      })
-      .filter((r) => r.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+    // 3. GPT 프롬프트 생성
+    const prompt = `
+You are a helpful recipe recommendation assistant.
 
-    res.json(scored);
+A user likes the following ingredients: ${liked.join(", ")}.
+They dislike the following: ${disliked.join(", ")}.
+
+Given the recipe list below, recommend the top 3 recipes that best match the user's taste.
+Respond ONLY as a JSON array like this: [{"id": ..., "title": "...", "reason": "..."}]
+
+Recipes:
+${recipesRes.rows
+  .map(
+    (r, i) =>
+      `${i + 1}. ID: ${r.id}, Title: ${r.title}, Ingredients: ${
+        r.ingredients
+      }, Description: ${r.description}`
+  )
+  .join("\n")}
+`;
+
+    // 4. GPT-3.5 API 호출
+    const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+      }),
+    });
+
+    const data = await gptRes.json();
+
+    // 5. JSON 파싱
+    const content = data.choices?.[0]?.message?.content || "[]";
+    const recommendations = JSON.parse(content);
+
+    console.log("GPT-3.5 recommendations:", recommendations);
+    
+    res.json(recommendations);
   } catch (err) {
-    console.error("Simple recommender error:", err);
-    res.status(500).json({ error: "Internal error" });
+    console.error("GPT-3.5 recommender error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 /* * * * * * * * * */
 /*   My Recipes    */
@@ -909,7 +864,6 @@ app.post("/recipes/my", async (req, res) => {
     res.status(500).json({ error: "Failed to save recipe" });
   }
 });
-
 
 app.get("/recipes/my", async (req, res) => {
   const { firebase_uid } = req.query;
@@ -972,7 +926,8 @@ app.delete("/recipes/my/:id", async (req, res) => {
         .map((s) => s.trim())
         .filter((favId) => favId !== id);
 
-      const newValue = updatedFavorites.length > 0 ? updatedFavorites.join(",") : null;
+      const newValue =
+        updatedFavorites.length > 0 ? updatedFavorites.join(",") : null;
 
       await pool.query(
         `UPDATE users SET favorite_user_recipes = $1 WHERE id = $2`,
@@ -980,7 +935,9 @@ app.delete("/recipes/my/:id", async (req, res) => {
       );
     }
 
-    res.json({ message: "Recipe deleted and removed from all users' favorites" });
+    res.json({
+      message: "Recipe deleted and removed from all users' favorites",
+    });
   } catch (err) {
     console.error("Error deleting recipe:", err);
     res.status(500).json({ error: "Failed to delete recipe" });
@@ -1035,7 +992,9 @@ app.post("/users/:firebase_uid/favorite-user-recipes", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const favorites = (userResult.rows[0].favorite_user_recipes || "").split(",").filter(Boolean);
+    const favorites = (userResult.rows[0].favorite_user_recipes || "")
+      .split(",")
+      .filter(Boolean);
 
     if (!favorites.includes(recipeId.toString())) {
       favorites.push(recipeId.toString());
@@ -1045,7 +1004,10 @@ app.post("/users/:firebase_uid/favorite-user-recipes", async (req, res) => {
         [favorites.join(","), firebase_uid]
       );
 
-      await pool.query("UPDATE my_recipes SET likes = likes + 1 WHERE id = $1", [recipeId]);
+      await pool.query(
+        "UPDATE my_recipes SET likes = likes + 1 WHERE id = $1",
+        [recipeId]
+      );
     }
 
     res.status(200).json({ message: "Added to favorite_user_recipes" });
@@ -1071,7 +1033,9 @@ app.delete("/users/:firebase_uid/favorite-user-recipes", async (req, res) => {
     }
 
     const currentFavorites = userResult.rows[0].favorite_user_recipes || "";
-    const favorites = currentFavorites.split(",").filter((s) => s && s !== recipeId.toString());
+    const favorites = currentFavorites
+      .split(",")
+      .filter((s) => s && s !== recipeId.toString());
 
     // likes -1
     await pool.query(
@@ -1103,7 +1067,6 @@ app.get("/admin/reset-feed", async (req, res) => {
     res.status(500).json({ error: "Failed to reset feed" });
   }
 });
-
 
 // Start the server
 const PORT = process.env.PORT || 5001;
