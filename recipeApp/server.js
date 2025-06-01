@@ -808,7 +808,7 @@ The user **dislikes** the following ingredients:
 - ${disliked.join("\n- ") || "None"}
 
 Below is a list of candidate recipes. Each includes an ID, title, and ingredients. 
-Your task is to select the **top 6 most suitable recipes** based on the user's preferences.
+Your task is to select the **top 8 most suitable recipes** based on the user's preferences.
 
 Important:
 - Prioritize recipes that include liked ingredients.
