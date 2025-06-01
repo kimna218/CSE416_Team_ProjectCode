@@ -1,24 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../css/SearchResult.css";
-
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-    SpeechRecognition: any;
-  }
-}
-type SpeechRecognitionType = typeof window.webkitSpeechRecognition;
+import { getCurrentLang } from "../components/language";
 
 interface Recipe {
   id: number;
   name: string;
+  en_name: string;
   category: string;
   image_url: string;
   ingredients: string;
+  en_ingredients: string;
 }
 
 const SearchResult: React.FC = () => {
+  const lang = getCurrentLang();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("query") || "";
 
@@ -27,54 +23,8 @@ const SearchResult: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasSearched, setHasSearched] = useState(!!initialQuery);
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<InstanceType<SpeechRecognitionType> | null>(null);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      console.error("Web Speech API not supported in this browser.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "ko-KR";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event: SpeechRecognitionType) => {
-      const transcript = event.results[0][0].transcript;
-      setInputValue(transcript);
-      setSearchInput(transcript.toLowerCase());
-      setSearchParams({ query: transcript });
-      setHasSearched(true);
-      setIsListening(false);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-  }, [setSearchParams]);
-
-  const handleVoiceSearch = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-    } else {
-      recognitionRef.current?.start();
-      setIsListening(true);
-    }
-  };
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -105,14 +55,29 @@ const SearchResult: React.FC = () => {
   };
 
   const handleClick = (recipe: Recipe) => {
-    const path = `/recipes/detail/${encodeURIComponent(recipe.name)}`;
+    const path = `/recipes/detail/${encodeURIComponent(
+      lang === "en" ? recipe.en_name || recipe.name : recipe.name
+    )}`;
     navigate(path);
   };
 
   const filteredRecipes = recipes.filter((recipe) => {
-    const searchKeywords = searchInput.split(/[\s,]+/).map(k => k.trim()).filter(k => k.length > 0);
-    const recipeText = `${recipe.name} ${recipe.ingredients}`.toLowerCase();
-    return searchKeywords.some(keyword => recipeText.includes(keyword));
+    const searchKeywords = searchInput
+      .split(/[\s,]+/)
+      .map((k) => k.trim())
+      .filter((k) => k.length > 0);
+
+    const recipeText = [
+      recipe.name,
+      recipe.en_name,
+      recipe.ingredients,
+      recipe.en_ingredients,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchKeywords.some((keyword) => recipeText.includes(keyword));
   });
 
   if (loading) {
@@ -134,9 +99,6 @@ const SearchResult: React.FC = () => {
           placeholder="Enter input..."
           className="search-box"
         />
-        <button className="mic-icon-button" onClick={handleVoiceSearch}>
-          {isListening ? "🎙️ Listening ..." : "🎤 Voice Search"}
-        </button>
       </div>
 
       <div className="results-grid">
@@ -145,7 +107,9 @@ const SearchResult: React.FC = () => {
             filteredRecipes.map((recipe, index) => (
               <div key={index} className="result-recipe-card" onClick={() => handleClick(recipe)}>
                 <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
-                <p className="recipe-name">{recipe.name}</p>
+                <p className="recipe-name">
+                  {lang === "en" ? recipe.en_name || recipe.name : recipe.name}
+                </p>
               </div>
             ))
           ) : (
