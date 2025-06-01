@@ -147,8 +147,8 @@ const Feed: React.FC = () => {
           return {
             ...prev,
             [postId]: liked
-              ? (prev[postId] || 0) + 1
-              : Math.max((prev[postId] || 1) - 1, 0),
+              ? Number(prev[postId] || 0) + 1
+              : Math.max(Number(prev[postId] || 1) - 1, 0),
           };
         } else {
           return prev;
