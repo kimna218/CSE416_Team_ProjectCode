@@ -385,6 +385,7 @@ app.get("/recipes/popular", async (req, res) => {
       ORDER BY likes DESC
       LIMIT 4
     `);
+    console.log("✅ Fetched popular recipes:", result.rows);
     res.status(200).json(result.rows);
   } catch (err) {
     console.error("Error fetching popular recipes:", err);
