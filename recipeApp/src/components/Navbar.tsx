@@ -6,10 +6,12 @@ import { FaSearch, FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { setCurrentLang } from "../components/language";
+import Guideline from "./guideline";
 
 const AppNavbar: React.FC = () => {
   const navigate = useNavigate();
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   useEffect(() => {
     const auth = getAuth();
@@ -25,6 +27,10 @@ const AppNavbar: React.FC = () => {
   }, []);
 
   return (
+    <>
+      {/* 📘 안내 모달 */}
+      {showGuideModal && <Guideline onClose={() => setShowGuideModal(false)} />}
+
     <Navbar bg="light" expand="md" className="custom-navbar shadow-sm py-3">
       <Container className="d-grid navbar-grid">
         <div className="navbar-left">
@@ -75,6 +81,15 @@ const AppNavbar: React.FC = () => {
             >
               🇺🇸
             </Button>
+
+            <Button
+                variant="outline-secondary"
+                className="icon-btn me-2"
+                onClick={() => setShowGuideModal(true)}
+              >
+                📘
+              </Button>
+
             <Button
               variant="outline-secondary"
               className="icon-btn me-2"
@@ -108,6 +123,7 @@ const AppNavbar: React.FC = () => {
         </div>
       </Container>
     </Navbar>
+    </>
   );
 };
 
