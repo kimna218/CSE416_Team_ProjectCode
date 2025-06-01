@@ -1,21 +1,52 @@
+/* ===== Hero Section ===== */
 .hero-section {
-    background: linear-gradient(to right, #fef6f0, #ffe2d1);
-    border-radius: 15px;
-    padding: 60px 20px;
-    text-align: center;
-    margin-bottom: 40px;
+  background: linear-gradient(135deg, #ffe0cc, #fff5f0);
+  border-radius: 20px;
+  padding: 60px 30px;
+  text-align: center;
+  margin-bottom: 50px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
 }
 
 .hero-section h1 {
-    font-size: 2.5rem;
-    color: #ff7043;
-    margin-bottom: 10px;
+  font-size: 2.5rem;
+  color: #ff6a3d;
+  margin-bottom: 16px;
+  font-weight: 700;
 }
 
 .hero-section p {
-    font-size: 1.2rem;
-    color: #333;
+  font-size: 1.1rem;
+  color: #444;
+  margin-bottom: 30px;
 }
+
+.cta-button {
+  background-color: #ff7043;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cta-button:hover {
+  background-color: #e5582c;
+}
+
+.hero-section::after {
+  content: "🍴";
+  font-size: 10rem;
+  color: rgba(255, 255, 255, 0.3);
+  position: absolute;
+  bottom: -20px;
+  right: 20px;
+  transform: rotate(-20deg);
+}
+
 
 .categories-preview,
 .popular-recipes,
