@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/Home.css";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getCurrentLang } from "../components/language";
 
 interface Recipe {
@@ -117,9 +117,20 @@ const fetchRecommended = async () => {
       }
     };
 
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        fetchRecommended();
+      } else {
+        console.log("User is authenticated, skipping recommendations");
+      }
+    });
+
     fetchRecipesWithNutrition();
     fetchPopularRecipes();
     fetchRecommended();
+
+    return () => unsubscribe();
   }, []);
 
   const sortedRecipes = [...recipes].sort((a, b) => {
