@@ -821,13 +821,33 @@ ${recipesRes.rows
 
     const data = await gptRes.json();
 
-    // 5. JSON 파싱
-    const content = data.choices?.[0]?.message?.content || "[]";
-    const recommendations = JSON.parse(content);
+// 5. JSON 파싱
+const content = data.choices?.[0]?.message?.content || "[]";
+const gptRecommendations = JSON.parse(content);  // [{ id, title, reason }]
 
-    console.log("GPT-3.5 recommendations:", recommendations);
+// 6. id들만 뽑아서 DB에서 다시 전체 정보 조회
+const ids = gptRecommendations.map((r) => r.id);
+const detailedRes = await pool.query(
+  `SELECT id, name, en_name, image_url FROM recipes WHERE id = ANY($1::int[])`,
+  [ids]
+);
 
-    res.json(recommendations);
+// 7. 전체 레시피 정보와 reason을 조합
+const detailedMap = Object.fromEntries(
+  detailedRes.rows.map((r) => [r.id, r])
+);
+
+const final = gptRecommendations
+  .map((rec) => {
+    const recipe = detailedMap[rec.id];
+    return recipe
+      ? { ...recipe, reason: rec.reason }
+      : null;
+  })
+  .filter((r) => r !== null);
+
+res.json(final);
+
   } catch (err) {
     console.error("GPT-3.5 recommender error:", err);
     res.status(500).json({ error: "Internal server error" });

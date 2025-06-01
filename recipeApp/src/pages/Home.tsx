@@ -36,18 +36,6 @@ function Home() {
   const recipesPerPage = 12;
 
 const fetchRecommended = async (uid: string) => {
-  const today = new Date().toISOString().slice(0, 10);
-  const cacheKey = `recommendations_${uid}`;
-  const cached = localStorage.getItem(cacheKey);
-
-  if (cached) {
-    const parsed = JSON.parse(cached);
-    if (parsed.date === today) {
-      setRecommendedRecipes(parsed.data);
-      return;
-    }
-  }
-
   try {
     const res = await fetch(
       `${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`
@@ -56,13 +44,11 @@ const fetchRecommended = async (uid: string) => {
 
     if (data.error === "no-preference") {
       setRecommendedRecipes([]);
-      localStorage.setItem(cacheKey, JSON.stringify({ date: today, data: [] }));
       setRecommendationMessage(data.message); // 👈 상태에 메시지 저장
       return;
     }
 
     setRecommendedRecipes(data);
-    localStorage.setItem(cacheKey, JSON.stringify({ date: today, data }));
     setRecommendationMessage(""); // 메시지 초기화
   } catch (err) {
     console.error("Failed to fetch recommended recipes", err);
@@ -70,7 +56,6 @@ const fetchRecommended = async (uid: string) => {
     setRecommendationMessage("Failed to load recommendations.");
   }
 };
-
 
   useEffect(() => {
     const fetchRecipesWithNutrition = async () => {
