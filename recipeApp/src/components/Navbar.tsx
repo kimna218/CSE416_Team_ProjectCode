@@ -25,7 +25,7 @@ const AppNavbar: React.FC = () => {
   }, []);
 
   return (
-    <Navbar bg="light" expand="lg" className="custom-navbar shadow-sm py-3">
+    <Navbar bg="light" expand="md" className="custom-navbar shadow-sm py-3">
       <Container className="d-grid navbar-grid">
         <div className="navbar-left">
           <Navbar.Brand onClick={() => navigate("/")} className="navbar-logo">
