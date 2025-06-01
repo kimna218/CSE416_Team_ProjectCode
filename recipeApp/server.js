@@ -776,13 +776,26 @@ app.get("/recommend-recipes", async (req, res) => {
       });
     }
 
-    // 2. 레시피 리스트 일부 불러오기 (토큰 초과 방지)
-const recipesRes = await pool.query(`
-  SELECT id, name AS title, ingredients
-  FROM recipes
-  WHERE ingredients IS NOT NULL
-  LIMIT 15
-`);
+    // 2. liked 재료를 이용해 ingredients에 포함된 레시피 50개 추출
+    const conditions = liked.map((_, i) => `ingredients ILIKE $${i + 1}`).join(" OR ");
+    const values = liked.map((item) => `%${item}%`);
+
+    const recipesRes = await pool.query(
+      `
+      SELECT id, name AS title, ingredients
+      FROM recipes
+      WHERE ingredients IS NOT NULL AND (${conditions})
+      LIMIT 50
+      `,
+      values
+    );
+
+    if (recipesRes.rows.length === 0) {
+      return res.status(200).json({
+        error: "no-match",
+        message: "No recipes match your liked ingredients.",
+      });
+    }
 
     // 3. GPT 프롬프트 생성
     const prompt = `
@@ -798,9 +811,7 @@ Recipes:
 ${recipesRes.rows
   .map(
     (r, i) =>
-      `${i + 1}. ID: ${r.id}, Title: ${r.title}, Ingredients: ${
-        r.ingredients
-      }`
+      `${i + 1}. ID: ${r.id}, Title: ${r.title}, Ingredients: ${r.ingredients}`
   )
   .join("\n")}
 `;
@@ -821,38 +832,37 @@ ${recipesRes.rows
 
     const data = await gptRes.json();
 
-// 5. JSON 파싱
-const content = data.choices?.[0]?.message?.content || "[]";
-const gptRecommendations = JSON.parse(content);  // [{ id, title, reason }]
+    // 5. JSON 파싱
+    const content = data.choices?.[0]?.message?.content || "[]";
+    const gptRecommendations = JSON.parse(content);  // [{ id, title, reason }]
 
-// 6. id들만 뽑아서 DB에서 다시 전체 정보 조회
-const ids = gptRecommendations.map((r) => r.id);
-const detailedRes = await pool.query(
-  `SELECT id, name, en_name, image_url FROM recipes WHERE id = ANY($1::int[])`,
-  [ids]
-);
+    // 6. id들만 뽑아서 DB에서 다시 전체 정보 조회
+    const ids = gptRecommendations.map((r) => r.id);
+    const detailedRes = await pool.query(
+      `SELECT id, name, en_name, image_url FROM recipes WHERE id = ANY($1::int[])`,
+      [ids]
+    );
 
-// 7. 전체 레시피 정보와 reason을 조합
-const detailedMap = Object.fromEntries(
-  detailedRes.rows.map((r) => [r.id, r])
-);
+    // 7. 전체 레시피 정보와 reason을 조합
+    const detailedMap = Object.fromEntries(
+      detailedRes.rows.map((r) => [r.id, r])
+    );
 
-const final = gptRecommendations
-  .map((rec) => {
-    const recipe = detailedMap[rec.id];
-    return recipe
-      ? { ...recipe, reason: rec.reason }
-      : null;
-  })
-  .filter((r) => r !== null);
+    const final = gptRecommendations
+      .map((rec) => {
+        const recipe = detailedMap[rec.id];
+        return recipe ? { ...recipe, reason: rec.reason } : null;
+      })
+      .filter((r) => r !== null);
 
-res.json(final);
-
+    console.log("✅ GPT-3.5 recommendations:", final);
+    res.json(final);
   } catch (err) {
     console.error("GPT-3.5 recommender error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 /* * * * * * * * * */
 /*   My Recipes    */
