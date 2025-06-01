@@ -14,7 +14,7 @@ import MyRecipe from "./pages/MyRecipe";
 import MyRecipeDetails from "./pages/MyRecipeDetails";
 import UploadRecipe from "./components/UploadRecipe";
 import Explore from "./pages/Explore";
-import Guideline from "./components/guideline";
+import Guideline from "./components/Guideline";
 
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import { getAuth } from "firebase/auth";
