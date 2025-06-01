@@ -119,7 +119,7 @@ const fetchRecommended = async () => {
 
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
+      if (user) {
         fetchRecommended();
       } else {
         console.log("User is authenticated, skipping recommendations");

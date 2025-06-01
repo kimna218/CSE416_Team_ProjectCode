@@ -821,7 +821,7 @@ ${recipesRes.rows
     const recommendations = JSON.parse(content);
 
     console.log("GPT-3.5 recommendations:", recommendations);
-    
+
     res.json(recommendations);
   } catch (err) {
     console.error("GPT-3.5 recommender error:", err);
@@ -1066,6 +1066,11 @@ app.get("/admin/reset-feed", async (req, res) => {
     console.error("Feed reset error:", err);
     res.status(500).json({ error: "Failed to reset feed" });
   }
+});
+
+// Show server is ready message
+app.get("/", (req, res) => {
+  res.send("✅ Server is ready!");
 });
 
 // Start the server
