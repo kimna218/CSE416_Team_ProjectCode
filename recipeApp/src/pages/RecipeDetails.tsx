@@ -146,7 +146,7 @@ const RecipeDetails: React.FC = () => {
   };
 
   return (
-    <div className="recipe-detail-page">
+    <div className="top-class recipe-detail-page">
       <div className="recipe-title-box">
         <h2 className="recipe-title">
         {lang === "en" ? recipe?.en_name || recipe?.name : recipe?.name}

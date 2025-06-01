@@ -1,20 +1,15 @@
-/* Container */
-.user-setup-page {
-  font-family: 'Inter', sans-serif;
+.user-setup-page,
+.login-page {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 80px 20px;
-  padding-right: 40px;
-  width: 100vw;
 }
 
 .setup-box {
   background: white;
   border-radius: 20px;
   padding: 40px;
-  max-width: 480px;
-  width: 100%;
+  max-width: 500px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
@@ -114,28 +109,16 @@
   margin-top: 16px;
 }
 
-.login-page {
-  display: flex;
-  width: 100vw;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
 .login-box {
   background-color: #fff8f4;
   border: 2px solid #ffe2d1;
   border-radius: 20px;
   padding: 40px 30px;
-  max-width: 400px;
-  width: 100%;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   text-align: center;
 }
 
 .app-title {
-  font-family: 'Inter', sans-serif;
   font-size: 1.8rem;
   color: #ff7043;
   margin-bottom: 20px;

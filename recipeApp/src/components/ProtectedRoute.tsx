@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }, []);
 
 
-  if (checking) return <p>로그인 여부 확인 중...</p>;
+  if (checking) return <p>Checking login status...</p>;
 
   return <>{children}</>;
 };

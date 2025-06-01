@@ -1,11 +1,3 @@
-/* 전체 페이지 */
-.feed-page {
-  font-family: 'Inter', sans-serif;
-  width: 100vw;
-  padding: 60px 40px;
-  box-sizing: border-box;
-}
-
 /* 업로드 영역 */
 .upload-section {
   background-color: #fff8f4;

@@ -90,7 +90,7 @@ const MyRecipeDetails: React.FC = () => {
   if (!recipe) return <p>Recipe not found</p>;
 
   return (
-    <div className="recipe-detail-page">
+    <div className="top-class recipe-detail-page">
       <div className="recipe-title-box">
         <h2 className="recipe-title">
           {recipe.title}

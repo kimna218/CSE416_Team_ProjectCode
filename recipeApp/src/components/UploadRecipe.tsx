@@ -23,7 +23,7 @@ const UploadRecipe: React.FC = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null); // ✅ 파일 자체만 저장
-  const [previewUrl, setPreviewUrl] = useState<string>("");      // ✅ 미리보기용 URL
+  const [previewUrl, setPreviewUrl] = useState<string>(""); // ✅ 미리보기용 URL
   const [ingredients, setIngredients] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
   const [stepInput, setStepInput] = useState("");
@@ -42,7 +42,10 @@ const UploadRecipe: React.FC = () => {
 
   const addStep = () => {
     if (stepInput.trim()) {
-      setSteps([...steps, { step_number: steps.length + 1, description: stepInput }]);
+      setSteps([
+        ...steps,
+        { step_number: steps.length + 1, description: stepInput },
+      ]);
       setStepInput("");
     }
   };
@@ -116,68 +119,85 @@ const UploadRecipe: React.FC = () => {
   };
 
   return (
-    <div className="upload-wrapper">
-    <div className="upload-page">
-      <h2>Upload Your Recipe</h2>
+    <div className="top-class upload-wrapper">
+      <div className="upload-page">
+        <h2>Upload Your Recipe</h2>
 
-      <label>Title *</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} />
+        <label>Title *</label>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} />
 
-      <label>Description *</label>
-      <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
-
-      <label>Recipe Image *</label>
-      <input type="file" accept="image/*" onChange={handleImageChange} />
-      {previewUrl && <img src={previewUrl} alt="Preview" style={{ width: "100%", marginTop: "10px" }} />}
-      {uploadMessage && <p>{uploadMessage}</p>}
-
-      <label>Ingredients</label>
-      <textarea
-        value={ingredients}
-        onChange={(e) => setIngredients(e.target.value)}
-        placeholder="Example: 1 cup rice\n2 eggs"
-      />
-
-      <label>Steps *</label>
-      <div className="steps-box">
-        <input
-          value={stepInput}
-          onChange={(e) => setStepInput(e.target.value)}
-          placeholder="Enter step description"
+        <label>Description *</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
         />
-        <button type="button" onClick={addStep}>+ Add Step</button>
-        <ul>
-          {steps.map((step) => (
-            <li key={step.step_number}>
-              <strong>Step {step.step_number}:</strong> {step.description}
-            </li>
-          ))}
-        </ul>
-      </div>
 
-      <label>Nutrition Info</label>
-      <div className="nutrition-fields">
-        {["calories", "carbohydrates", "protein", "fat", "sodium"].map((field) => (
-          <div className="nutrition-row" key={field}>
-            <span>{field.charAt(0).toUpperCase() + field.slice(1)}:</span>
-            <input
-              type="text"
-              value={nutrition[field as keyof Nutrition]}
-              onChange={(e) =>
-                setNutrition({
-                  ...nutrition,
-                  [field]: Number(e.target.value),
-                })
-              }
-            />
-          </div>
-        ))}
-      </div>
+        <label>Recipe Image *</label>
+        <input type="file" accept="image/*" onChange={handleImageChange} />
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt="Preview"
+            style={{ width: "100%", marginTop: "10px" }}
+          />
+        )}
+        {uploadMessage && <p>{uploadMessage}</p>}
 
-      <button className="submit-button" onClick={handleSubmit} disabled={isUploading}>
-        Save Recipe
-      </button>
-    </div>
+        <label>Ingredients</label>
+        <textarea
+          value={ingredients}
+          onChange={(e) => setIngredients(e.target.value)}
+          placeholder="Example: 1 cup rice\n2 eggs"
+        />
+
+        <label>Steps *</label>
+        <div className="steps-box">
+          <input
+            value={stepInput}
+            onChange={(e) => setStepInput(e.target.value)}
+            placeholder="Enter step description"
+          />
+          <button type="button" onClick={addStep}>
+            + Add Step
+          </button>
+          <ul>
+            {steps.map((step) => (
+              <li key={step.step_number}>
+                <strong>Step {step.step_number}:</strong> {step.description}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <label>Nutrition Info</label>
+        <div className="nutrition-fields">
+          {["calories", "carbohydrates", "protein", "fat", "sodium"].map(
+            (field) => (
+              <div className="nutrition-row" key={field}>
+                <span>{field.charAt(0).toUpperCase() + field.slice(1)}:</span>
+                <input
+                  type="text"
+                  value={nutrition[field as keyof Nutrition]}
+                  onChange={(e) =>
+                    setNutrition({
+                      ...nutrition,
+                      [field]: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            )
+          )}
+        </div>
+
+        <button
+          className="submit-button"
+          onClick={handleSubmit}
+          disabled={isUploading}
+        >
+          Save Recipe
+        </button>
+      </div>
     </div>
   );
 };

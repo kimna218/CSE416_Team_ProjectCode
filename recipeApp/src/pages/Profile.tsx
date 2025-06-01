@@ -156,7 +156,7 @@ function Profile() {
   if (!user) return <p>Loading profile...</p>;
 
   return (
-    <div className="profile-page">
+    <div className="top-class profile-page">
       <div className="profile-header">
         <img src={user.profileImage} alt={`${user.name}'s profile`} className="profile-image" />
         <h1>{user.name}</h1>

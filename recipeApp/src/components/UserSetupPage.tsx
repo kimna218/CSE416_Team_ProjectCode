@@ -54,7 +54,7 @@ const UserSetupPage: React.FC = () => {
 
 
   return (
-    <div className="user-setup-page">
+    <div className="top-class user-setup-page">
       <div className="setup-box">
         <h2>👋 Welcome! Tell us about you</h2>
 

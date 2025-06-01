@@ -149,7 +149,7 @@ const fetchRecommended = async (uid: string) => {
   };
 
   return (
-    <div className="home-page">
+    <div className="top-class home-page">
       <div className="hero-section">
         <h1>Welcome to RecipeApp 🍳</h1>
         <p>

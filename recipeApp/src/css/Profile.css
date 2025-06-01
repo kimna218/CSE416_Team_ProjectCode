@@ -1,13 +1,3 @@
-/* Page Layout */
-.profile-page {
-  font-family: 'Inter', sans-serif;
-  justify-content: center;
-  align-items: center;
-  padding: 80px 20px;
-  padding-right: 40px;
-  width: 100vw;
-}
-
 /* Header */
 .profile-header {
   text-align: center;

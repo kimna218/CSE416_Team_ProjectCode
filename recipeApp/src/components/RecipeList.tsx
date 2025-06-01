@@ -53,7 +53,7 @@ const RecipeList: React.FC = () => {
   };
 
   return (
-    <div className="recipe-list-page">
+    <div className="top-class recipe-list-page">
       <h1>{category?.toUpperCase()} Recipes</h1>
 
       {loading ? (

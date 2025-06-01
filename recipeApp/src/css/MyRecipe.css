@@ -1,17 +1,6 @@
-.my-recipes-page {
-    font-family: 'Inter', sans-serif;
-    justify-content: center;
-    align-items: center;
-    padding: 80px 20px;
-    padding-right: 40px;
-    width: 100vw; 
-}
-
 .my-recipes-page h1 {
-    font-size: 2rem;
     margin-bottom: 30px;
     color: #FF7043;
-    text-transform: uppercase;
     letter-spacing: 1px; 
 }
 

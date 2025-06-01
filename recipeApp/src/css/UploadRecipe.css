@@ -1,12 +1,10 @@
 .upload-wrapper {
     display: flex;
     justify-content: center;
-    padding: 40px 20px;
     box-sizing: border-box;
 }
 
 .upload-page {
-    width: 100vw;
     background-color: #fff8f4;
     border: 2px solid #ffe2d1;
     border-radius: 20px;

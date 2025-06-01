@@ -64,7 +64,7 @@ const MyRecipe: React.FC = () => {
   };  
 
   return (
-    <div className="my-recipes-page">
+    <div className="top-class my-recipes-page">
       <h1>My Recipes</h1>
       <div className="my-recipes-buttons">
         <Link to="/MyRecipe/UploadRecipe" className="upload-button">+ Add New Recipe</Link>

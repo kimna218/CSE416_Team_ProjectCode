@@ -269,7 +269,7 @@ const Feed: React.FC = () => {
   }, []);
 
   return (
-    <div className="feed-page">
+    <div className="top-class feed-page">
       <section className="upload-section">
         <textarea
           value={newPostCaption}

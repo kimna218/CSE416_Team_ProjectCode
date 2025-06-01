@@ -33,7 +33,7 @@ const Explore: React.FC = () => {
   }, []);
 
   return (
-    <div className="explore-page">
+    <div className="top-class explore-page">
       <h1>Explore User's Recipes</h1>
       {recipes.length === 0 ? (
         <p>No recipes to explore yet.</p>

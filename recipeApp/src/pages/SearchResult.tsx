@@ -85,7 +85,7 @@ const SearchResult: React.FC = () => {
   }
 
   return (
-    <div className="search-result-page">
+    <div className="top-class search-result-page">
       <h1>Search Recipes</h1>
       <p className="search-result-page-desc">
         Filter recipes by its name or enter ingredients separated by space (e.g., 새우 계란 토마토):
@@ -106,7 +106,7 @@ const SearchResult: React.FC = () => {
           filteredRecipes.length > 0 ? (
             filteredRecipes.map((recipe, index) => (
               <div key={index} className="result-recipe-card" onClick={() => handleClick(recipe)}>
-                <img src={recipe.image_url} alt={recipe.name} className="recipe-image" />
+                <img src={recipe.image_url} alt={recipe.name} className="search-recipe-image" />
                 <p className="recipe-name">
                   {lang === "en" ? recipe.en_name || recipe.name : recipe.name}
                 </p>

@@ -1,11 +1,3 @@
-/* Home.css */
-.home-page {
-    font-family: 'Inter', sans-serif;
-    width: 100vw;
-    padding: 40px 20px;
-    padding-right: 40px;
-}
-
 .hero-section {
     background: linear-gradient(to right, #fef6f0, #ffe2d1);
     border-radius: 15px;

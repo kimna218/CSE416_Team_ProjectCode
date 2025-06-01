@@ -1,12 +1,3 @@
-.recipe-detail-page {
-  font-family: 'Inter', sans-serif;
-  justify-content: center;
-  align-items: center;
-  padding: 80px 200px;
-  padding-right: 240px;
-  width: 100vw;
-}
-
 .recipe-title-box {
   display: flex;
   align-items: center;
@@ -15,7 +6,6 @@
 }
 
 .recipe-title {
-  font-size: 2rem;
   font-weight: bold;
   display: flex;
   align-items: center;

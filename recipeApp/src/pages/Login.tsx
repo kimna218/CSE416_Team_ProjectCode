@@ -29,7 +29,7 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page">
+    <div className="top-class login-page">
       <div className="login-box">
         <h1 className="app-title">🍳 Smart AI Recipes</h1>
         <p className="login-message">You need to login to continue!</p>

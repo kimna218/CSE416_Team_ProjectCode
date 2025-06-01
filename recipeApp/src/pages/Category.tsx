@@ -14,7 +14,7 @@ const Category: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="category-page">
+    <div className="top-class category-page">
       <h1>Choose a Category</h1>
       <div className="category-grid">
         {categories.map((category, index) => (
