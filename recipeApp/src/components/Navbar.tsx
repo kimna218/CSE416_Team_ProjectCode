@@ -6,7 +6,7 @@ import { FaSearch, FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { setCurrentLang } from "../components/language";
-import Guideline from "./guideline";
+import Guideline from "./Guideline";
 
 const AppNavbar: React.FC = () => {
   const navigate = useNavigate();
