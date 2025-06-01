@@ -139,12 +139,22 @@ const Feed: React.FC = () => {
       const result = await res.json();
 
       const liked = result.liked;
-      setLikes((prev) => ({
-        ...prev,
-        [postId]: liked
-          ? (prev[postId] || 0) + 1
-          : Math.max((prev[postId] || 1) - 1, 0),
-      }));
+      setLikes((prev) => {
+        const wasLiked = userLikes[postId] || false;
+
+        // 상태가 바뀌었을 때만 업데이트
+        if (wasLiked !== liked) {
+          return {
+            ...prev,
+            [postId]: liked
+              ? (prev[postId] || 0) + 1
+              : Math.max((prev[postId] || 1) - 1, 0),
+          };
+        } else {
+          return prev;
+        }
+      });
+
       setUserLikes((prev) => ({
         ...prev,
         [postId]: liked,
@@ -175,7 +185,7 @@ const Feed: React.FC = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: nickname, 
+          username: nickname,
           caption: newPostCaption,
           image_url: imageUrl,
         }),
@@ -263,16 +273,16 @@ const Feed: React.FC = () => {
 
         <div className="preview-container">
           {previewUrl && (
-          <img src={previewUrl} alt="Preview" className="preview-file" />
-        )}
-        {uploadMessage && <p>{uploadMessage}</p>}
-        <button
-          className="upload-btn"
-          onClick={handleNewPost}
-          disabled={isUploading}
-        >
-          {isUploading ? "Uploading..." : "Upload"}
-        </button>
+            <img src={previewUrl} alt="Preview" className="preview-file" />
+          )}
+          {uploadMessage && <p>{uploadMessage}</p>}
+          <button
+            className="upload-btn"
+            onClick={handleNewPost}
+            disabled={isUploading}
+          >
+            {isUploading ? "Uploading..." : "Upload"}
+          </button>
         </div>
       </section>
 
@@ -286,8 +296,7 @@ const Feed: React.FC = () => {
             </div>
             <div className="post-actions">
               <button className="like-btn" onClick={() => handleLike(post.id)}>
-                {userLikes[post.id] ? "♥" : "♡"}{" "}
-                {likes[post.id] || 0}
+                {userLikes[post.id] ? "♥" : "♡"} {likes[post.id] || 0}
               </button>
               <button
                 className="comment-toggle"

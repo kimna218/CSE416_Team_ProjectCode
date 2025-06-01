@@ -500,24 +500,6 @@ app.post("/posts/:postId/comments", async (req, res) => {
   }
 });
 
-app.post("/posts/:postId/like", async (req, res) => {
-  const { firebase_uid } = req.body;
-  const postId = parseInt(req.params.postId);
-
-  try {
-    await pool.query(
-      `INSERT INTO post_likes (post_id, firebase_uid)
-       VALUES ($1, $2)
-       ON CONFLICT DO NOTHING`,
-      [postId, firebase_uid]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Failed to like post:", err);
-    res.status(500).json({ error: "Failed to like post" });
-  }
-});
-
 /* * * * * * * * */
 /*     Users     */
 /* * * * * * * * */
