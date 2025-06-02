@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import "../css/Profile.css";
-import { getAuth, signOut } from "firebase/auth";
+import {
+  getAuth,
+  signOut,
+  GoogleAuthProvider,
+  reauthenticateWithPopup,
+  deleteUser,
+} from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 interface Recipe {
@@ -47,7 +53,6 @@ function Profile() {
             favoriteRecipes: recipeNames,
             favoriteUserRecipeIds: userRecipeIds,
           });
-          
 
           const liked = JSON.parse(userData.liked_ingredients || "[]");
           const disliked = JSON.parse(userData.disliked_ingredients || "[]");
@@ -93,6 +98,35 @@ function Profile() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+  
+    if (!currentUser) return;
+  
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+    if (!confirmDelete) return;
+  
+    try {
+      const provider = new GoogleAuthProvider();
+      await reauthenticateWithPopup(currentUser, provider); // ✅ 재인증
+  
+      // 서버에서 DB 관련 데이터 먼저 삭제
+      await fetch(`${import.meta.env.VITE_API_URL}/users/${currentUser.uid}`, {
+        method: "DELETE",
+      });
+  
+      await deleteUser(currentUser); // ✅ Firebase 계정 삭제
+      alert("Your account has been deleted.");
+      navigate("/login");
+    } catch (err: any) {
+      console.error("Account deletion failed:", err);
+      alert("Failed to delete account. Please try again.");
+    }
+  };
+  
   const handleAddDislike = () => {
     if (dislikedInput && !dislikedList.includes(dislikedInput)) {
       setDislikedList([...dislikedList, dislikedInput]);
@@ -162,6 +196,7 @@ function Profile() {
         <h1>{user.name}</h1>
         <p>{user.email}</p>
         <button className="logout-button" onClick={handleLogout}>Logout</button>
+        <button className="logout-button" onClick={handleDeleteAccount}>Delete Account</button>
       </div>
 
       <div className="profile-section">

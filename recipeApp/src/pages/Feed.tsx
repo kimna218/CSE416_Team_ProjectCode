@@ -175,23 +175,26 @@ const Feed: React.FC = () => {
 
   const handleNewPost = async () => {
     if (!newPostCaption || !uploadFile) return;
-
+  
     const imageUrl = await uploadImageToCloudinary(uploadFile);
     if (!imageUrl) return;
-
+  
     const nickname = await fetchNickname();
-
+    const uid = auth.currentUser?.uid;
+    if (!uid || !nickname) return;
+  
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          firebase_uid: uid,
           username: nickname,
           caption: newPostCaption,
           image_url: imageUrl,
         }),
       });
-
+  
       const newPost = await res.json();
       setPosts((prev) => [newPost, ...prev]);
       setNewPostCaption("");
@@ -200,14 +203,16 @@ const Feed: React.FC = () => {
     } catch (err) {
       console.error("Failed to upload post:", err);
     }
-  };
+  };  
 
   const handleCommentSubmit = async (postId: number) => {
     const text = newCommentText[postId];
     if (!text) return;
-
+  
     const nickname = await fetchNickname();
-
+    const uid = auth.currentUser?.uid;
+    if (!uid || !nickname) return;
+  
     try {
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/posts/${postId}/comments`,
@@ -215,12 +220,13 @@ const Feed: React.FC = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            firebase_uid: uid,
             username: nickname,
             text,
           }),
         }
       );
-
+  
       const newComment = await res.json();
       setComments((prev) => ({
         ...prev,
@@ -230,7 +236,7 @@ const Feed: React.FC = () => {
     } catch (err) {
       console.error("Failed to submit comment:", err);
     }
-  };
+  };  
 
   const handleDeletePost = async (postId: number) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;

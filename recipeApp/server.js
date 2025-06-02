@@ -79,6 +79,7 @@ await pool.query(`
 await pool.query(`
   CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
+    firebase_uid VARCHAR(255) NOT NULL,
     username VARCHAR(100) NOT NULL,
     caption TEXT,
     image_url TEXT,
@@ -90,6 +91,7 @@ await pool.query(`
   CREATE TABLE IF NOT EXISTS post_comments (
     id SERIAL PRIMARY KEY,
     post_id INT REFERENCES posts(id) ON DELETE CASCADE,
+    firebase_uid VARCHAR(255) NOT NULL,
     username VARCHAR(100) NOT NULL,
     text TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -404,12 +406,18 @@ app.get("/posts", async (req, res) => {
 });
 
 app.post("/posts", async (req, res) => {
-  const { username, caption, image_url } = req.body;
+  const { firebase_uid, username, caption, image_url } = req.body;
+
+  // 필수 항목 확인
+  if (!firebase_uid || !username || !image_url) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
   try {
     const result = await pool.query(
-      `INSERT INTO posts (username, caption, image_url)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [username, caption, image_url]
+      `INSERT INTO posts (firebase_uid, username, caption, image_url)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [firebase_uid, username, caption, image_url]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -677,6 +685,38 @@ app.delete("/users/:firebase_uid/favorites", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+app.delete("/users/:firebase_uid", async (req, res) => {
+  const { firebase_uid } = req.params;
+
+  try {
+    // 1. users 테이블에서 user_id 가져오기
+    const userResult = await pool.query(
+      "SELECT id FROM users WHERE firebase_uid = $1",
+      [firebase_uid]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // const user_id = userResult.rows[0].id;
+
+    // 2. 관련 테이블에서 데이터 삭제
+    await pool.query("DELETE FROM recipes_rate WHERE user_id = $1", [firebase_uid]);
+    await pool.query("DELETE FROM my_recipes WHERE user_id = $1", [firebase_uid]); 
+    await pool.query("DELETE FROM post_comments WHERE firebase_uid = $1", [firebase_uid]);
+    await pool.query("DELETE FROM posts WHERE firebase_uid = $1", [firebase_uid]);
+    await pool.query("DELETE FROM users WHERE firebase_uid = $1", [firebase_uid]);
+    await pool.query("DELETE FROM post_likes WHERE firebase_uid = $1", [firebase_uid]);
+
+    res.json({ message: "User and all related data deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting user and related data:", err);
+    res.status(500).json({ error: "Failed to delete user data." });
+  }
+});
+
 
 /* * * * * * * * */
 /*   Feedback    */
