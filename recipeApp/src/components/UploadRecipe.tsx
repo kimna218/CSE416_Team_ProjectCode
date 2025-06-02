@@ -107,7 +107,7 @@ const UploadRecipe: React.FC = () => {
 
       if (!res.ok) throw new Error("Upload failed");
 
-      alert("✅ Recipe saved to database!");
+      alert("Recipe Uploaded!");
       navigate("/MyRecipe");
     } catch (err) {
       console.error("Submit failed:", err);
