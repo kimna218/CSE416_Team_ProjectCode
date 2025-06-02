@@ -196,7 +196,7 @@ function Profile() {
         <h1>{user.name}</h1>
         <p>{user.email}</p>
         <button className="logout-button" onClick={handleLogout}>Logout</button>
-        <button className="logout-button" onClick={handleDeleteAccount}>Delete Account</button>
+        <button className="logout-button delete-account-button" onClick={handleDeleteAccount}>Delete Account</button>
       </div>
 
       <div className="profile-section">

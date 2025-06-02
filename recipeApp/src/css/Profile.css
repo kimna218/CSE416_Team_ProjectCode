@@ -37,13 +37,17 @@
   background-color: #ffccb3;
 }
 
+.delete-account-button {
+  margin-left: 10px;
+}
+
 /* Section Titles */
 .profile-section {
   margin-top: 40px;
 }
 
 .profile-section h2 {
-  font-size: 20px;
+  font-size: 28px;
   margin-bottom: 16px;
   border-bottom: 2px solid #ffd6c4;
   padding-bottom: 4px;
@@ -113,7 +117,6 @@
 
 .profile-section button {
   padding: 8px 16px;
-  font-size: 14px;
   border-radius: 30px;
   border: none;
   cursor: pointer;

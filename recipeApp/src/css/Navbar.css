@@ -48,6 +48,7 @@
 
 .navbar-logo img:hover {
   transform: scale(1.05);
+  cursor: pointer;
 }
 
 /* 중앙 버튼 */
@@ -58,11 +59,14 @@
 
 .nav-btn {
   padding: 6px 15px;
+  align-items: center;
+  justify-content: center;
   border-radius: 30px;
   font-weight: 600;
   font-size: 15px;
   color: #000000;
   border: none;
+  height: 30px;
   background-color: transparent;
   transition: all 0.3s ease;
 }
