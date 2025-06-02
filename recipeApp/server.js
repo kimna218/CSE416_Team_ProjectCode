@@ -502,19 +502,25 @@ app.get("/posts/:postId/comments", async (req, res) => {
 
 app.post("/posts/:postId/comments", async (req, res) => {
   const postId = parseInt(req.params.postId, 10);
-  const { username, text } = req.body;
+  const { firebase_uid, username, text } = req.body;
+
+  if (!firebase_uid || !username || !text) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
   try {
     const result = await pool.query(
-      `INSERT INTO post_comments (post_id, username, text)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [postId, username, text]
+      `INSERT INTO post_comments (post_id, firebase_uid, username, text)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [postId, firebase_uid, username, text]
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("Failed to insert comment:", err);
+    console.error("❌ Failed to insert comment:", err);
     res.status(500).json({ error: "Failed to insert comment" });
   }
 });
+
 
 app.delete("/posts/:postId", async (req, res) => {
   const { postId } = req.params;
