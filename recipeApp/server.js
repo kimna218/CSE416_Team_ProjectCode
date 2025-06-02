@@ -935,12 +935,11 @@ app.get("/recipes/my", async (req, res) => {
 
 app.get("/recipes/my/:id", async (req, res) => {
   const { id } = req.params;
-  const { firebase_uid } = req.query;
 
   try {
     const result = await pool.query(
-      `SELECT * FROM my_recipes WHERE id = $1 AND user_id = $2`,
-      [id, firebase_uid]
+      `SELECT * FROM my_recipes WHERE id = $1`,
+      [id]
     );
 
     if (result.rowCount === 0) {
