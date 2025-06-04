@@ -30,6 +30,9 @@ const UploadRecipe: React.FC = () => {
   const [ingredients, setIngredients] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
   const [stepInput, setStepInput] = useState("");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editedStep, setEditedStep] = useState("");
+
   const [nutrition, setNutrition] = useState<Nutrition>({
     calories: 0,
     carbohydrates: 0,
@@ -75,11 +78,16 @@ const UploadRecipe: React.FC = () => {
   };
 
   const removeStep = (index: number) => {
-    const updatedSteps = steps.filter((_, i) => i !== index).map((s, i) => ({
-      step_number: i + 1,
-      description: s.description,
-    }));
+    const updatedSteps = steps
+      .filter((_, i) => i !== index)
+      .map((s, i) => ({
+        step_number: i + 1,
+        description: s.description,
+      }));
     setSteps(updatedSteps);
+    if (editingIndex === index) {
+      setEditingIndex(null);
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,8 +198,45 @@ const UploadRecipe: React.FC = () => {
           <ul>
             {steps.map((step, index) => (
               <li key={index}>
-                <strong>Step {step.step_number}:</strong> {step.description}
-                <button type="button" onClick={() => removeStep(index)} style={{ marginLeft: 10}}> X </button>
+                <strong>Step {step.step_number}:</strong>{" "}
+                {editingIndex === index ? (
+                  <>
+                    <input
+                      value={editedStep}
+                      onChange={(e) => setEditedStep(e.target.value)}
+                      style={{ marginRight: 10 }}
+                    />
+                    <button onClick={() => {
+                      const updated = [...steps];
+                      updated[index].description = editedStep;
+                      setSteps(updated);
+                      setEditingIndex(null);
+                      setEditedStep("");
+                    }}>
+                      Save
+                    </button>
+                    <button onClick={() => setEditingIndex(null)}>Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    {step.description}
+                    <button
+                      onClick={() => {
+                        setEditingIndex(index);
+                        setEditedStep(step.description);
+                      }}
+                      style={{ marginLeft: 10 }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => removeStep(index)}
+                      style={{ marginLeft: 6, color: "crimson" }}
+                    >
+                      X
+                    </button>
+                  </>
+                )}
               </li>
             ))}
           </ul>
