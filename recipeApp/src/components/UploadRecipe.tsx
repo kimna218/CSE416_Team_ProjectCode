@@ -59,7 +59,7 @@ const UploadRecipe: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!title || !description || !imageFile || steps.length === 0) {
+    if (!title ||!ingredients || !description || !imageFile || steps.length === 0) {
       alert("Please fill in all required fields.");
       return;
     }
@@ -143,7 +143,7 @@ const UploadRecipe: React.FC = () => {
         )}
         {uploadMessage && <p>{uploadMessage}</p>}
 
-        <label>Ingredients</label>
+        <label>Ingredients *</label>
         <textarea
           value={ingredients}
           onChange={(e) => setIngredients(e.target.value)}
