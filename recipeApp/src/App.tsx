@@ -94,6 +94,7 @@ const App: React.FC = () => {
           }
         />
         <Route path="/MyRecipe/UploadRecipe" element={<UploadRecipe />} />
+        <Route path="/MyRecipe/edit/:id" element={<UploadRecipe />} />
         <Route path="/MyRecipe/detail/:id" element={<MyRecipeDetails />} />
         <Route path="/Explore" element={<Explore />} />
       </Routes>
