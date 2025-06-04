@@ -84,6 +84,16 @@ const MyRecipe: React.FC = () => {
               <h3>{recipe.title}</h3>
               <p>{recipe.description}</p>
               <button
+                className="edit-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/MyRecipe/edit/${recipe.id}`);
+                }}
+              >
+                ✏️ Edit
+              </button>
+
+              <button
                 className="delete-button"
                 onClick={(e) => {
                   e.stopPropagation();

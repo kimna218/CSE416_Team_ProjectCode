@@ -999,6 +999,35 @@ app.get("/recipes/my/:id", async (req, res) => {
   }
 });
 
+app.put("/recipes/my/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    firebase_uid,
+    title,
+    description,
+    image_url,
+    ingredients,
+    steps,
+    nutrition
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE my_recipes SET title=$1, description=$2, image_url=$3, ingredients=$4, steps=$5, nutrition=$6
+       WHERE id=$7 AND user_id=$8`,
+      [title, description, image_url, ingredients, JSON.stringify(steps), JSON.stringify(nutrition), id, firebase_uid]
+    );
+
+    if (result.rowCount === 0) return res.status(404).json({ error: "Not found or unauthorized" });
+
+    res.json({ message: "Recipe updated" });
+  } catch (err) {
+    console.error("Update failed:", err);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
+
 app.delete("/recipes/my/:id", async (req, res) => {
   const { id } = req.params;
   const { firebase_uid } = req.query;

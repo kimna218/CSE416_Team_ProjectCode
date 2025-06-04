@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import "../css/UploadRecipe.css";
 
@@ -20,10 +20,13 @@ const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dlm1w7msc/image/upload";
 const CLOUDINARY_PRESET = "ml_default";
 
 const UploadRecipe: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const editMode = Boolean(id);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null); // ✅ 파일 자체만 저장
-  const [previewUrl, setPreviewUrl] = useState<string>(""); // ✅ 미리보기용 URL
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
   const [ingredients, setIngredients] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
   const [stepInput, setStepInput] = useState("");
@@ -40,12 +43,33 @@ const UploadRecipe: React.FC = () => {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!editMode) return;
+    const fetchRecipe = async () => {
+      const user = getAuth().currentUser;
+      if (!user) return;
+
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/recipes/my/${id}?firebase_uid=${user.uid}`
+        );
+        const data = await res.json();
+        setTitle(data.title);
+        setDescription(data.description);
+        setIngredients(data.ingredients);
+        setSteps(data.steps || []);
+        setNutrition(data.nutrition || {});
+        setPreviewUrl(data.image_url);
+      } catch (err) {
+        console.error("Error loading recipe:", err);
+      }
+    };
+    fetchRecipe();
+  }, [editMode, id]);
+
   const addStep = () => {
     if (stepInput.trim()) {
-      setSteps([
-        ...steps,
-        { step_number: steps.length + 1, description: stepInput },
-      ]);
+      setSteps([...steps, { step_number: steps.length + 1, description: stepInput }]);
       setStepInput("");
     }
   };
@@ -54,12 +78,12 @@ const UploadRecipe: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setImageFile(file); // 저장만 하고 업로드는 안 함
-    setPreviewUrl(URL.createObjectURL(file)); // 미리보기용
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleSubmit = async () => {
-    if (!title ||!ingredients || !description || !imageFile || steps.length === 0) {
+    if (!title || !ingredients || !description || steps.length === 0) {
       alert("Please fill in all required fields.");
       return;
     }
@@ -71,25 +95,25 @@ const UploadRecipe: React.FC = () => {
     }
 
     setIsUploading(true);
-    setUploadMessage("Uploading image...");
+    setUploadMessage(editMode ? "Updating recipe..." : "Uploading image...");
 
     try {
-      // ✅ 1. 이미지 업로드
-      const formData = new FormData();
-      formData.append("file", imageFile);
-      formData.append("upload_preset", CLOUDINARY_PRESET);
+      let imageUrl = previewUrl;
 
-      const imageRes = await fetch(CLOUDINARY_URL, {
-        method: "POST",
-        body: formData,
-      });
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+        formData.append("upload_preset", CLOUDINARY_PRESET);
 
-      const imageData = await imageRes.json();
-      const imageUrl = imageData.secure_url;
-      setUploadMessage("✅ Image uploaded. Saving recipe...");
+        const imageRes = await fetch(CLOUDINARY_URL, {
+          method: "POST",
+          body: formData,
+        });
+        const imageData = await imageRes.json();
+        imageUrl = imageData.secure_url;
+      }
 
-      // ✅ 2. DB에 레시피 저장
-      const newRecipe = {
+      const recipePayload = {
         title,
         description,
         image_url: imageUrl,
@@ -99,19 +123,25 @@ const UploadRecipe: React.FC = () => {
         firebase_uid: user.uid,
       };
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/my`, {
-        method: "POST",
+      const endpoint = editMode
+        ? `${import.meta.env.VITE_API_URL}/recipes/my/${id}`
+        : `${import.meta.env.VITE_API_URL}/recipes/my`;
+
+      const method = editMode ? "PUT" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newRecipe),
+        body: JSON.stringify(recipePayload),
       });
 
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) throw new Error("Save failed");
 
-      alert("Recipe Uploaded!");
+      alert(editMode ? "Recipe updated!" : "Recipe uploaded!");
       navigate("/MyRecipe");
     } catch (err) {
       console.error("Submit failed:", err);
-      alert("❌ Failed to upload. Please try again.");
+      alert("❌ Failed to save recipe.");
     } finally {
       setIsUploading(false);
       setUploadMessage("");
@@ -121,26 +151,17 @@ const UploadRecipe: React.FC = () => {
   return (
     <div className="top-class upload-wrapper">
       <div className="upload-page">
-        <h2>Upload Your Recipe</h2>
+        <h2>{editMode ? "Edit Your Recipe" : "Upload Your Recipe"}</h2>
 
         <label>Title *</label>
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
 
         <label>Description *</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
 
-        <label>Recipe Image *</label>
+        <label>Recipe Image {editMode ? "(optional)" : "*"}</label>
         <input type="file" accept="image/*" onChange={handleImageChange} />
-        {previewUrl && (
-          <img
-            src={previewUrl}
-            alt="Preview"
-            style={{ width: "100%", marginTop: "10px" }}
-          />
-        )}
+        {previewUrl && <img src={previewUrl} alt="Preview" className="preview-image" />}
         {uploadMessage && <p>{uploadMessage}</p>}
 
         <label>Ingredients *</label>
@@ -157,9 +178,7 @@ const UploadRecipe: React.FC = () => {
             onChange={(e) => setStepInput(e.target.value)}
             placeholder="Enter step description"
           />
-          <button type="button" onClick={addStep}>
-            + Add Step
-          </button>
+          <button type="button" onClick={addStep}>+ Add Step</button>
           <ul>
             {steps.map((step) => (
               <li key={step.step_number}>
@@ -171,23 +190,21 @@ const UploadRecipe: React.FC = () => {
 
         <label>Nutrition Info</label>
         <div className="nutrition-fields">
-          {["calories", "carbohydrates", "protein", "fat", "sodium"].map(
-            (field) => (
-              <div className="nutrition-row" key={field}>
-                <span>{field.charAt(0).toUpperCase() + field.slice(1)}:</span>
-                <input
-                  type="text"
-                  value={nutrition[field as keyof Nutrition]}
-                  onChange={(e) =>
-                    setNutrition({
-                      ...nutrition,
-                      [field]: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
-            )
-          )}
+          {["calories", "carbohydrates", "protein", "fat", "sodium"].map((field) => (
+            <div className="nutrition-row" key={field}>
+              <span>{field.charAt(0).toUpperCase() + field.slice(1)}:</span>
+              <input
+                type="text"
+                value={nutrition[field as keyof Nutrition]}
+                onChange={(e) =>
+                  setNutrition({
+                    ...nutrition,
+                    [field]: Number(e.target.value),
+                  })
+                }
+              />
+            </div>
+          ))}
         </div>
 
         <button
@@ -195,7 +212,7 @@ const UploadRecipe: React.FC = () => {
           onClick={handleSubmit}
           disabled={isUploading}
         >
-          Save Recipe
+          {editMode ? "Save Changes" : "Save Recipe"}
         </button>
       </div>
     </div>
