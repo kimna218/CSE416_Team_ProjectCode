@@ -191,7 +191,7 @@ const UploadRecipe: React.FC = () => {
             {steps.map((step, index) => (
               <li key={index}>
                 <strong>Step {step.step_number}:</strong> {step.description}
-                <button type="button" onClick={() => removeStep(index)} style={{ marginLeft: 10, color: 'crimson' }}>🗑</button>
+                <button type="button" onClick={() => removeStep(index)} style={{ marginLeft: 10}}> X </button>
               </li>
             ))}
           </ul>
