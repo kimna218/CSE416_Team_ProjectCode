@@ -74,6 +74,14 @@ const UploadRecipe: React.FC = () => {
     }
   };
 
+  const removeStep = (index: number) => {
+    const updatedSteps = steps.filter((_, i) => i !== index).map((s, i) => ({
+      step_number: i + 1,
+      description: s.description,
+    }));
+    setSteps(updatedSteps);
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -180,9 +188,10 @@ const UploadRecipe: React.FC = () => {
           />
           <button type="button" onClick={addStep}>+ Add Step</button>
           <ul>
-            {steps.map((step) => (
-              <li key={step.step_number}>
+            {steps.map((step, index) => (
+              <li key={index}>
                 <strong>Step {step.step_number}:</strong> {step.description}
+                <button type="button" onClick={() => removeStep(index)} style={{ marginLeft: 10, color: 'crimson' }}>🗑</button>
               </li>
             ))}
           </ul>
