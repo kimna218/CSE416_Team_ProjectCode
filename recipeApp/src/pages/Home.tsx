@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/Home.css";
+import "../css/Spinner.css";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getCurrentLang } from "../components/language";
 import Guideline from "../components/Guideline";
@@ -30,16 +31,21 @@ function Home() {
   const lang = getCurrentLang();
   const [recipes, setRecipes] = useState<FullRecipe[]>([]);
   const [popularRecipes, setPopularRecipes] = useState<Recipe[]>([]);
-  const [sortKey, setSortKey] = useState<string>("protein");
   const [recommendedRecipes, setRecommendedRecipes] = useState<any[]>([]);
   const [recommendationMessage, setRecommendationMessage] =
     useState<string>("");
   const [showGuideline, setShowGuideline] = useState(false);
+  const [sortKey, setSortKey] = useState<string>("protein");
+
+  const [isLoadingRecommended, setIsLoadingRecommended] = useState(true);
+  const [isLoadingPopular, setIsLoadingPopular] = useState(true);
+  const [isLoadingNutrition, setIsLoadingNutrition] = useState(true);
 
   const [currentPage, setCurrentPage] = useState(1);
   const recipesPerPage = 12;
 
   const fetchRecommended = async (uid: string) => {
+    setIsLoadingRecommended(true);
     try {
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/recommend-recipes?uid=${uid}`
@@ -48,21 +54,23 @@ function Home() {
 
       if (data.error === "no-preference") {
         setRecommendedRecipes([]);
-        setRecommendationMessage(data.message); // 👈 상태에 메시지 저장
-        return;
+        setRecommendationMessage(data.message);
+      } else {
+        setRecommendedRecipes(data);
+        setRecommendationMessage("");
       }
-
-      setRecommendedRecipes(data);
-      setRecommendationMessage(""); // 메시지 초기화
     } catch (err) {
       console.error("Failed to fetch recommended recipes", err);
       setRecommendedRecipes([]);
       setRecommendationMessage("Failed to load recommendations.");
+    } finally {
+      setIsLoadingRecommended(false);
     }
   };
 
-  useEffect(() => {
-    const fetchRecipesWithNutrition = async () => {
+  const fetchRecipesWithNutrition = async () => {
+    setIsLoadingNutrition(true);
+    try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes`);
       const data: Recipe[] = await res.json();
 
@@ -70,14 +78,11 @@ function Home() {
         data.map(async (recipe) => {
           try {
             const nutriRes = await fetch(
-              `${import.meta.env.VITE_API_URL}/recipes/detail/${
-                recipe.id
-              }/nutrition`
+              `${import.meta.env.VITE_API_URL}/recipes/detail/${recipe.id}/nutrition`
             );
             const nutrition: Nutrition = await nutriRes.json();
             return { ...recipe, ...nutrition };
-          } catch (err) {
-            console.warn(`Nutrition missing for: ${recipe.name}`);
+          } catch {
             return null;
           }
         })
@@ -85,26 +90,33 @@ function Home() {
 
       const filtered = enriched.filter((r) => r !== null) as FullRecipe[];
       setRecipes(filtered);
-    };
+    } catch (err) {
+      console.error("Failed to fetch recipes:", err);
+    } finally {
+      setIsLoadingNutrition(false);
+    }
+  };
 
-    const fetchPopularRecipes = async () => {
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/recipes/popular`
-        );
-        const data: Recipe[] = await res.json();
-        setPopularRecipes(data);
-      } catch (err) {
-        console.error("Failed to fetch popular recipes:", err);
-      }
-    };
+  const fetchPopularRecipes = async () => {
+    setIsLoadingPopular(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/recipes/popular`
+      );
+      const data: Recipe[] = await res.json();
+      setPopularRecipes(data);
+    } catch (err) {
+      console.error("Failed to fetch popular recipes:", err);
+    } finally {
+      setIsLoadingPopular(false);
+    }
+  };
 
+  useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         fetchRecommended(user.uid);
-      } else {
-        console.log("User is not authenticated, skipping recommendations");
       }
     });
 
@@ -169,7 +181,9 @@ function Home() {
         <div className="categories-preview">
           <h2>AI Recommended Recipes</h2>
           <div className="rec-recipe-grid">
-            {recommendedRecipes.length > 0 ? (
+            {isLoadingRecommended ? (
+              <div className="spinner" />
+            ) : recommendedRecipes.length > 0 ? (
               recommendedRecipes.map((recipe) => (
                 <div
                   key={recipe.id}
@@ -190,32 +204,38 @@ function Home() {
                 </div>
               ))
             ) : (
-              <p>{recommendationMessage || "Loading recommendations..."}</p>
+              <p>{recommendationMessage || "No recommended recipes."}</p>
             )}
           </div>
         </div>
 
         <div className="popular-recipes">
           <h2>Popular Recipes</h2>
-          <div className="home-recipe-grid">
-            {popularRecipes.map((recipe) => (
-              <div
-                key={recipe.id}
-                className="popular-recipe-card"
-                onClick={() => handleClick(recipe)}
-              >
-                <img
-                  src={recipe.image_url}
-                  alt={recipe.name}
-                  className="popular-recipe-image"
-                />
-                <p className="home-recipe-name">
-                  {lang == "en" ? recipe.en_name || recipe.name : recipe.name}
-                </p>
-                <p className="home-recipe-likes">❤️ {recipe.likes} Likes</p>
-              </div>
-            ))}
-          </div>
+          {isLoadingPopular ? (
+            <div className="spinner" />
+          ) : (
+            <div className="home-recipe-grid">
+              {popularRecipes.map((recipe) => (
+                <div
+                  key={recipe.id}
+                  className="popular-recipe-card"
+                  onClick={() => handleClick(recipe)}
+                >
+                  <img
+                    src={recipe.image_url}
+                    alt={recipe.name}
+                    className="popular-recipe-image"
+                  />
+                  <p className="home-recipe-name">
+                    {lang == "en"
+                      ? recipe.en_name || recipe.name
+                      : recipe.name}
+                  </p>
+                  <p className="home-recipe-likes">❤️ {recipe.likes} Likes</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="sort-bar">
@@ -237,33 +257,39 @@ function Home() {
         </div>
 
         <div className="home-category-grid">
-          {currentRecipes.map((recipe) => (
-            <div
-              key={recipe.id}
-              className="home-recipe-card"
-              onClick={() => handleClick(recipe)}
-            >
-              <img
-                src={recipe.image_url}
-                alt={recipe.name}
-                className="home-recipe-image"
-              />
-              <p className="home-recipe-name">
-                {lang == "en" ? recipe.en_name || recipe.name : recipe.name}
-              </p>
-              <p className="nutrition-info">
-                {`Protein: ${recipe.protein.toFixed(
-                  1
-                )}g | Carbs: ${recipe.carbohydrates.toFixed(
-                  1
-                )}g | Fat: ${recipe.fat.toFixed(
-                  1
-                )}g | Sodium: ${recipe.sodium.toFixed(1)}mg | Calories: ${
-                  recipe.calories
-                }`}
-              </p>
-            </div>
-          ))}
+          {isLoadingNutrition ? (
+            <div className="spinner" />
+          ) : (
+            currentRecipes.map((recipe) => (
+              <div
+                key={recipe.id}
+                className="home-recipe-card"
+                onClick={() => handleClick(recipe)}
+              >
+                <img
+                  src={recipe.image_url}
+                  alt={recipe.name}
+                  className="home-recipe-image"
+                />
+                <p className="home-recipe-name">
+                  {lang == "en"
+                    ? recipe.en_name || recipe.name
+                    : recipe.name}
+                </p>
+                <p className="nutrition-info">
+                  {`Protein: ${recipe.protein.toFixed(
+                    1
+                  )}g | Carbs: ${recipe.carbohydrates.toFixed(
+                    1
+                  )}g | Fat: ${recipe.fat.toFixed(
+                    1
+                  )}g | Sodium: ${recipe.sodium.toFixed(
+                    1
+                  )}mg | Calories: ${recipe.calories}`}
+                </p>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="pagination">

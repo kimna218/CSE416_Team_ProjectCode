@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useParams,useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "../css/RecipeList.css";
+import "../css/Spinner.css"; // 추가
 import { getCurrentLang } from "../components/language";
 
 interface Recipe {
@@ -57,22 +58,31 @@ const RecipeList: React.FC = () => {
       <h1>{category?.toUpperCase()} Recipes</h1>
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="spinner" />
       ) : (
         <div className="recipe-grid">
           {categoryRecipes.map((recipe) => (
-            <div key={recipe.id} className="list-recipe-card" onClick={() => handleClick(recipe)}>
-              <img src={recipe.image_url} alt={recipe.name} className="list-recipe-image" />
-              <p className="list-recipe-name">{lang === "en" ? recipe.en_name || recipe.name : recipe.name}</p>
+            <div
+              key={recipe.id}
+              className="list-recipe-card"
+              onClick={() => handleClick(recipe)}
+            >
+              <img
+                src={recipe.image_url}
+                alt={recipe.name}
+                className="list-recipe-image"
+              />
+              <p className="list-recipe-name">
+                {lang === "en"
+                  ? recipe.en_name || recipe.name
+                  : recipe.name}
+              </p>
             </div>
           ))}
         </div>
       )}
     </div>
   );
-  
 };
-
-
 
 export default RecipeList;
