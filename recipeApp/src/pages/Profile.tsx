@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "../css/Profile.css";
+import "../css/Spinner.css";
 import {
   getAuth,
   signOut,
@@ -111,14 +112,13 @@ function Profile() {
   
     try {
       const provider = new GoogleAuthProvider();
-      await reauthenticateWithPopup(currentUser, provider); // ✅ 재인증
+      await reauthenticateWithPopup(currentUser, provider);
   
-      // 서버에서 DB 관련 데이터 먼저 삭제
       await fetch(`${import.meta.env.VITE_API_URL}/users/${currentUser.uid}`, {
         method: "DELETE",
       });
   
-      await deleteUser(currentUser); // ✅ Firebase 계정 삭제
+      await deleteUser(currentUser);
       alert("Your account has been deleted.");
       navigate("/login");
     } catch (err: any) {
@@ -187,7 +187,7 @@ function Profile() {
     navigate(path);
   };
 
-  if (!user) return <p>Loading profile...</p>;
+  if (!user) return <div className="spinner" />;
 
   return (
     <div className="top-class profile-page">
