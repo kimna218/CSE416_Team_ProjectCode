@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../css/MyRecipe.css";
+import "../css/Spinner.css";
 import { getAuth } from "firebase/auth";
 
 interface RecipeSummary {
@@ -12,6 +13,7 @@ interface RecipeSummary {
 
 const MyRecipe: React.FC = () => {
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +25,7 @@ const MyRecipe: React.FC = () => {
       }
 
       try {
+        setIsLoading(true);
         const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/my?firebase_uid=${user.uid}`);
         if (!res.ok) throw new Error("Failed to fetch recipes");
 
@@ -31,6 +34,8 @@ const MyRecipe: React.FC = () => {
       } catch (err) {
         console.error("Fetch error:", err);
         alert("Failed to load recipes.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -70,7 +75,9 @@ const MyRecipe: React.FC = () => {
         <Link to="/MyRecipe/UploadRecipe" className="upload-button">+ Add New Recipe</Link>
         <Link to="/Explore" className="explore-button">🌎 Explore</Link>
       </div>
-      {recipes.length === 0 ? (
+      {isLoading ? (
+        <div className="spinner" />
+      ) : recipes.length === 0 ? (
         <p>You haven’t added any recipes yet.</p>
       ) : (
         <div className="recipe-grid">

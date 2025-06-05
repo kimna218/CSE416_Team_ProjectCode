@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {useNavigate } from "react-router-dom";
 import "../css/Explore.css";
+import "../css/Spinner.css";
 
 interface Recipe {
   id: number;
@@ -13,11 +14,13 @@ interface Recipe {
 
 const Explore: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchExploreRecipes = async () => {
       try {
+        setIsLoading(true);
         const res = await fetch(`${import.meta.env.VITE_API_URL}/recipes/explore`);
         if (!res.ok) throw new Error("Failed to fetch");
 
@@ -26,6 +29,8 @@ const Explore: React.FC = () => {
       } catch (err) {
         console.error("Explore fetch error:", err);
         alert("Failed to load recipes.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -35,7 +40,9 @@ const Explore: React.FC = () => {
   return (
     <div className="top-class explore-page">
       <h1>Explore User's Recipes</h1>
-      {recipes.length === 0 ? (
+      {isLoading ? (
+        <div className="spinner" />
+      ) : recipes.length === 0 ? (
         <p>No recipes to explore yet.</p>
       ) : (
         <div className="explore-grid">
