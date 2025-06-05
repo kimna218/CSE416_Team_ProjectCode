@@ -32,6 +32,8 @@ const Feed: React.FC = () => {
   const [uploadMessage, setUploadMessage] = useState<string>("");
   const [userLikes, setUserLikes] = useState<Record<number, boolean>>({});
   const [myNickname, setMyNickname] = useState<string>("");
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+
 
   const CLOUDINARY_URL =
     "https://api.cloudinary.com/v1_1/dlm1w7msc/image/upload";
@@ -67,12 +69,12 @@ const Feed: React.FC = () => {
   };
 
   const fetchPosts = async () => {
+    setIsLoadingPosts(true); // 시작 시 로딩 상태 ON
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`);
       const data = await res.json();
       setPosts(data);
-
-      // 좋아요 수 초기화
+  
       const likesRes = await fetch(
         `${import.meta.env.VITE_API_URL}/posts/likes`
       );
@@ -84,8 +86,10 @@ const Feed: React.FC = () => {
       setLikes(likeMap);
     } catch (err) {
       console.error("Failed to fetch posts or likes:", err);
+    } finally {
+      setIsLoadingPosts(false); // 끝나면 로딩 상태 OFF
     }
-  };
+  };  
 
   const toggleComments = async (postId: number) => {
     setShowComments((prev) => ({ ...prev, [postId]: !prev[postId] }));
@@ -319,64 +323,78 @@ const Feed: React.FC = () => {
             onClick={handleNewPost}
             disabled={isUploading}
           >
-            {isUploading ? "Uploading..." : "Upload"}
+            {isUploading ? (
+              <>
+                Uploading... <span className="spinner" />
+              </>
+            ) : (
+              "Upload"
+            )}
           </button>
+
         </div>
       </section>
 
       <section className="post-grid">
-        {posts.map((post) => (
-          <div key={post.id} className="post-card">
-            <img src={post.image_url} alt="food" className="post-image" />
-            <div className="post-info">
-              <p className="post-user">@{post.username}</p>
-              <p className="post-caption">{post.caption}</p>
-            </div>
+        {isLoadingPosts ? (
+          <div className="spinner" />
+        ) : posts.length === 0 ? (
+          <p>No posts yet.</p>
+        ) : (
+          posts.map((post) => (
+            <div key={post.id} className="post-card">
+              <img src={post.image_url} alt="food" className="post-image" />
+              <div className="post-info">
+                <p className="post-user">@{post.username}</p>
+                <p className="post-caption">{post.caption}</p>
+              </div>
 
-            <div className="post-actions">
-              <button className="like-btn" onClick={() => handleLike(post.id)}>
-                {userLikes[post.id] ? "♥" : "♡"} {likes[post.id] || 0}
-              </button>
-              <button
-                className="comment-toggle"
-                onClick={() => toggleComments(post.id)}
-              >
-                💬 Comment
-              </button>
-              {myNickname === post.username && (
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDeletePost(post.id)}
-                >
-                  🗑 Delete
+              <div className="post-actions">
+                <button className="like-btn" onClick={() => handleLike(post.id)}>
+                  {userLikes[post.id] ? "♥" : "♡"} {likes[post.id] || 0}
                 </button>
+                <button
+                  className="comment-toggle"
+                  onClick={() => toggleComments(post.id)}
+                >
+                  💬 Comment
+                </button>
+                {myNickname === post.username && (
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDeletePost(post.id)}
+                  >
+                    🗑 Delete
+                  </button>
+                )}
+              </div>
+
+              {showComments[post.id] && (
+                <div className="comments-section">
+                  {(comments[post.id] || []).map((comment) => (
+                    <p key={comment.id}>
+                      <strong>@{comment.username}:</strong> {comment.text}
+                    </p>
+                  ))}
+                  <input
+                    type="text"
+                    placeholder="Write a comment..."
+                    value={newCommentText[post.id] || ""}
+                    onChange={(e) =>
+                      setNewCommentText((prev) => ({
+                        ...prev,
+                        [post.id]: e.target.value,
+                      }))
+                    }
+                  />
+                  <button onClick={() => handleCommentSubmit(post.id)}>
+                    Submit
+                  </button>
+                </div>
               )}
             </div>
-            {showComments[post.id] && (
-              <div className="comments-section">
-                {(comments[post.id] || []).map((comment) => (
-                  <p key={comment.id}>
-                    <strong>@{comment.username}:</strong> {comment.text}
-                  </p>
-                ))}
-                <input
-                  type="text"
-                  placeholder="Write a comment..."
-                  value={newCommentText[post.id] || ""}
-                  onChange={(e) =>
-                    setNewCommentText((prev) => ({
-                      ...prev,
-                      [post.id]: e.target.value,
-                    }))
-                  }
-                />
-                <button onClick={() => handleCommentSubmit(post.id)}>
-                  Submit
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+          ))
+        )}
       </section>
     </div>
   );
