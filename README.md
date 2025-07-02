@@ -4,8 +4,8 @@
 
 ## 👥 Contributors
 
-- [@jellyrgb](https://github.com/jellyrgb)
-- [@kimna218](https://github.com/kimna218) 
+- Hyomin Kim: [@jellyrgb](https://github.com/jellyrgb)
+- Nahyun Kim: [@kimna218](https://github.com/kimna218) 
 
 ## 🔍 Problem Statement (Updated)
 
