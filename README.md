@@ -2,10 +2,10 @@
 
 ## AI Powered Recipe Recommendation Website
 
-### Team Members
+## 👥 Contributors
 
-- Hyomin Kim
-- Nahyun Kim
+- [@jellyrgb](https://github.com/jellyrgb)
+- [@kimna218](https://github.com/kimna218) 
 
 ## 🔍 Problem Statement (Updated)
 
